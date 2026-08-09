@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>School Clinic Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --maroon: #7B1028;
+      --maroon-dark: #3F0D1D;
+      --maroon-light: #8A2346;
+      --gold: #C9A24E;
+      --gold-light: #C9A227;
+      --pink-bg: #FDF6F8;
+      --pink-page: #F8F7FA;
+      --pink-border: #E8D4DB;
+      --text-dark: #2B2B2B;
+      --text-light: #F0ECF2;
+      --maroon-text: #7A1F3D;
+      --sidebar-width: 260px;
+      --sidebar-collapsed: 72px;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--pink-page);
+      color: var(--text-dark);
+    }
+    #root {
+      display: flex;
+      min-height: 100vh;
+    }
+    #root:has(> aside) {
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #root:has(> aside) > aside {
+      height: 100vh;
+    }
+    #root:has(> aside) > aside nav {
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #root:has(> aside) > aside nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    #root main {
+      overflow-y: auto;
+      min-height: 0;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-spin { animation: spin 1s linear infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .animate-spin { animation: none; }
+    }
+    .font-serif-heading { font-family: 'Playfair Display', Georgia, serif; }
+    .font-mono-data { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="js/api.js?v=27"></script>
+  <script src="js/app.js?v=27"></script>
+</body>
+</html>

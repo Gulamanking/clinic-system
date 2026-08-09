@@ -1,0 +1,14 @@
+{
+  "name": "clinic-system/backend",
+  "description": "Clinic Management System PHP Backend API",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-pgsql": "*",
+    "ext-mbstring": "*"
+  },
+  "scripts": {
+    "start": "php -S 0.0.0.0:8000 -t ."
+  }
+}

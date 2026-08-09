@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: clinic-system-backend
+    env: php
+    buildCommand: ""
+    startCommand: php -S 0.0.0.0:10000 index.php
+    envVars:
+      - key: DB_DRIVER
+        value: "mysql"
+        sync: false
+      - key: DB_HOST
+        value: "127.0.0.1"
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+        sync: false
+      - key: DB_NAME
+        value: "clinic_system"
+        sync: false
+      - key: DB_USER
+        value: "root"
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false

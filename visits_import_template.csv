@@ -1,0 +1,3 @@
+Patient Name,Patient Type,Grade / Department,Heads,Utility,Date,Time,Chief Complaint,Diagnosis,Treatment Given,Temperature (°C),Blood Pressure (mmHg),Pulse Rate (bpm),Assessment,Medicine Dispensed,Nurse on Duty,Disposition
+"Juan Dela Cruz","Student","BSIT 3rd Year","Dr. Reyes","General","2024-01-15","09:30","Headache and dizziness","Mild dehydration","Oral rehydration, rest","36.5","120/80","72","Stable condition","Paracetamol 500mg","Nurse Ana","Treated & Discharged"
+"Maria Santos","Faculty/Staff","College of Education","Dr. Garcia","Emergency","2024-01-15","10:15","Lower back pain","Muscle strain","Hot compress, pain reliever","36.8","130/85","78","Mild discomfort","Ibuprofen 400mg","Nurse Ana","Treated & Discharged"
