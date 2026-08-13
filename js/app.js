@@ -1478,6 +1478,10 @@ function renderMedicalRecordsModule() {
   var ms = getModuleState(key);
   var items = ms.items || [];
 
+  if (Array.isArray(ms.groups) && !ms.groups.length) {
+    delete ms.groups;
+  }
+
   loadMedicalRecordGroups(ms);
 
   var filtered = items;
@@ -2310,10 +2314,6 @@ function render() {
     mainContent = renderDashboard();
   } else if (state.currentView === 'reports') {
     mainContent = renderReports();
-  } else if (state.currentView === 'visits') {
-    mainContent = renderVisitsModule();
-  } else if (state.currentView === 'appointments') {
-    mainContent = renderAppointmentsModule();
   } else if (state.currentView === 'medicalRecords') {
     mainContent = renderMedicalRecordsModule();
   } else if (MODULES[state.currentView]) {
@@ -2321,6 +2321,8 @@ function render() {
   } else {
     mainContent = '<div style="color:#5A4A62">Page not found</div>';
   }
+
+  mainContent = mainContent || '<div class="p-5 text-sm" style="color:#5A4A62">Unable to load the <strong>' + esc(state.currentView || 'unknown') + '</strong> view. Please select another module.</div>';
 
   root.innerHTML = renderSidebar() +
     '<div class="flex min-w-0 flex-1 flex-col">' +
@@ -3233,19 +3235,18 @@ function renderMainContent() {
   } else if (state.currentView === 'reports') {
     mainContent = renderReports();
     mainEl.innerHTML = mainContent;
-  } else if (state.currentView === 'appointments') {
-    mainContent = renderAppointmentsModule();
-    mainEl.innerHTML = mainContent;
-  } else if (state.currentView === 'visits') {
-    mainContent = renderVisitsModule();
-    mainEl.innerHTML = mainContent;
   } else if (state.currentView === 'medicalRecords') {
     mainContent = renderMedicalRecordsModule();
     mainEl.innerHTML = mainContent;
   } else if (MODULES[state.currentView]) {
     mainContent = renderCrudModule(state.currentView);
     mainEl.innerHTML = mainContent;
+  } else {
+    mainEl.innerHTML = '<div style="color:#5A4A62">Page not found</div>';
   }
+
+  mainContent = mainContent || '<div class="p-5 text-sm" style="color:#5A4A62">Unable to load the <strong>' + esc(state.currentView || 'unknown') + '</strong> view. Please select another module.</div>';
+  mainEl.innerHTML = mainContent;
   lucide.createIcons();
 
   // Add input event listeners for enrollment modal
@@ -4228,6 +4229,12 @@ async function init() {
         role: session.role || 'Staff',
       };
       restoreState();
+      Object.keys(MODULES).forEach(function(key) {
+        var ms = getModuleState(key);
+        if (Array.isArray(ms.items) && !ms.items.length) {
+          delete ms.items;
+        }
+      });
       state.authLoading = false;
       render();
       state.dashData = dashData;
@@ -4249,5 +4256,13 @@ async function init() {
   state.authLoading = false;
   render();
 }
+
+window.addEventListener('error', function(e) {
+  var main = document.querySelector('#root main');
+  if (!main) return;
+  var err = e.error || e;
+  var msg = String(err.stack || err.message || err);
+  main.innerHTML = '<div class="p-5"><h3 class="font-serif-heading text-base font-semibold" style="color:#C13030">Runtime Error</h3><pre class="mt-3 text-xs" style="white-space:pre-wrap;color:#5A4A62;background:#FDF6F8;border:1px solid #E8D4DB;padding:1rem;border-radius:0.75rem">' + esc(msg) + '</pre></div>';
+});
 
 document.addEventListener('DOMContentLoaded', init);
