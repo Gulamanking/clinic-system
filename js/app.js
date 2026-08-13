@@ -1478,6 +1478,10 @@ function renderMedicalRecordsModule() {
   var ms = getModuleState(key);
   var items = ms.items || [];
 
+  if (Array.isArray(ms.groups) && !ms.groups.length) {
+    delete ms.groups;
+  }
+
   loadMedicalRecordGroups(ms);
 
   var filtered = items;
@@ -2321,6 +2325,8 @@ function render() {
   } else {
     mainContent = '<div style="color:#5A4A62">Page not found</div>';
   }
+
+  mainContent = mainContent || '';
 
   root.innerHTML = renderSidebar() +
     '<div class="flex min-w-0 flex-1 flex-col">' +
@@ -3245,7 +3251,12 @@ function renderMainContent() {
   } else if (MODULES[state.currentView]) {
     mainContent = renderCrudModule(state.currentView);
     mainEl.innerHTML = mainContent;
+  } else {
+    mainEl.innerHTML = '<div style="color:#5A4A62">Page not found</div>';
   }
+
+  mainContent = mainContent || '';
+  mainEl.innerHTML = mainContent;
   lucide.createIcons();
 
   // Add input event listeners for enrollment modal

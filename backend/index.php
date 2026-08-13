@@ -195,28 +195,14 @@ function handleDashboard() {
 /* ============================== RECORD FOLDERS ============================== */
 
 function handleRecordFoldersList() {
-    $base = dirname(__DIR__) . '/public/records';
-    if (!is_dir($base)) {
-        jsonResponse([]);
-    }
-    $entries = scandir($base);
-    $dirs = array_values(array_filter($entries, function($d) use ($base) {
-        return $d !== '.' && $d !== '..' && is_dir($base . '/' . $d);
-    }));
-    $result = array_map(function($name) use ($base) {
-        $path = $base . '/' . $name;
-        $metaFile = $path . '/metadata.json';
-        $meta = null;
-        if (file_exists($metaFile)) {
-            $j = @file_get_contents($metaFile);
-            $meta = $j ? @json_decode($j, true) : null;
-        }
+    $rows = dbQuery('SELECT groupfolder, MIN(created_at) AS created_at FROM medicalrecords WHERE groupfolder IS NOT NULL AND groupfolder != "" GROUP BY groupfolder ORDER BY groupfolder');
+    $result = array_map(function($row) {
         return [
-            'name' => $name,
-            'createdAt' => filectime($path) ?: null,
-            'meta' => $meta,
+            'name' => $row['groupfolder'],
+            'createdAt' => isset($row['created_at']) ? (int)$row['created_at'] : null,
+            'meta' => null,
         ];
-    }, $dirs);
+    }, $rows);
     jsonResponse($result);
 }
 
