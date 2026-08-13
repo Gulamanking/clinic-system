@@ -533,8 +533,8 @@ function getSampleData(string $table): ?array {
             ['name' => 'Juan Dela Cruz', 'personType' => 'Student', 'clearanceType' => 'Medical Clearance', 'dateIssued' => '2026-06-01', 'expiryDate' => '2026-12-31', 'status' => 'Valid', 'issuedBy' => 'Nurse Admin'],
         ],
         'medicalHistory' => [
-            ['historyId' => 'HIST-2026-001', 'studentId' => 'BCP-2024-0001', 'diagnosis' => 'Mild dehydration', 'treatment' => 'Oral rehydration and rest', 'doctor' => 'Dr. Reyes', 'visitDate' => date('Y-m-d')],
-            ['historyId' => 'HIST-2026-002', 'studentId' => 'BCP-2024-0002', 'diagnosis' => 'Tetanus booster needed', 'treatment' => 'Administered tetanus vaccine', 'doctor' => 'Nurse Admin', 'visitDate' => date('Y-m-d', strtotime('-7 days'))],
+            ['historyId' => 'HIST-2026-001', 'studentId' => 'BCP-2024-0001', 'studentName' => 'Juan Dela Cruz', 'department' => 'College of IT', 'yearLevel' => '3rd Year', 'section' => 'A', 'bloodType' => 'O+', 'course' => 'BSIT', 'diagnosis' => 'Mild dehydration', 'treatment' => 'Oral rehydration and rest', 'doctor' => 'Dr. Reyes', 'visitDate' => date('Y-m-d')],
+            ['historyId' => 'HIST-2026-002', 'studentId' => 'BCP-2024-0002', 'studentName' => 'Maria Santos', 'department' => 'College of Education', 'yearLevel' => '2nd Year', 'section' => 'B', 'bloodType' => 'A+', 'course' => 'BSED', 'diagnosis' => 'Tetanus booster needed', 'treatment' => 'Administered tetanus vaccine', 'doctor' => 'Nurse Admin', 'visitDate' => date('Y-m-d', strtotime('-7 days'))],
         ],
     ];
     return $samples[$table] ?? null;

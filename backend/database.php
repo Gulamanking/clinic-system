@@ -26,6 +26,14 @@ function dbKeyMap(): array {
         'groupFolder' => 'groupfolder',
         'medicalConditions' => 'medicalconditions',
         'immunizationStatus' => 'immunizationstatus',
+        // medical history
+        'historyId' => 'historyid',
+        'studentName' => 'studentname',
+        'department' => 'department',
+        'yearLevel' => 'yearlevel',
+        'section' => 'section',
+        'bloodType' => 'bloodtype',
+        'course' => 'course',
         // incidents
         'caseNo' => 'caseno',
         'personInvolved' => 'personinvolved',
@@ -254,7 +262,7 @@ function getAllowedColumns(string $table): array {
         'users' => ['id', 'fullname', 'username', 'password', 'role', 'status', 'created_at'],
         'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
         'medicalrecords' => ['id', 'recordid', 'status', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'allergies', 'medicalconditions', 'height', 'weight', 'vision', 'hearing', 'immunizationstatus', 'remarks', 'groupfolder', 'created_at'],
-        'medicalhistory' => ['id', 'historyid', 'studentid', 'diagnosis', 'treatment', 'doctor', 'visitdate', 'created_at'],
+        'medicalhistory' => ['id', 'historyid', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'course', 'diagnosis', 'treatment', 'doctor', 'visitdate', 'created_at'],
         'visits' => ['id', 'patientname', 'patienttype', 'date', 'time', 'complaint', 'diagnosis', 'treatment', 'nurseonduty', 'created_at'],
         'medicine' => ['id', 'name', 'category', 'stock', 'unit', 'expirydate', 'reorderlevel', 'created_at'],
         'appointments' => ['id', 'patientname', 'patienttype', 'date', 'time', 'type', 'status', 'notes', 'created_at'],

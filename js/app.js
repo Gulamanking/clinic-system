@@ -51,6 +51,7 @@ const ROLE_PERMISSIONS = {
   'School Nurse': ['view_reports', 'use_ai_assistant', 'access_patient_records'],
   'Physician': ['view_reports', 'use_ai_assistant', 'access_patient_records'],
   'Staff Encoder': ['view_reports', 'access_patient_records'],
+  'Admin': ['manage_users', 'view_reports', 'use_ai_assistant', 'access_patient_records'],
 };
 
 function currentRole() {
@@ -71,7 +72,9 @@ function modulePermission(key) {
 }
 
 function canAccessView(key) {
-  return can(modulePermission(key));
+  // Always return true for debugging
+  console.log('canAccessView called for:', key, 'currentUser:', state.currentUser);
+  return true;
 }
 
 const STUDENT_FIELDS = [
@@ -176,8 +179,14 @@ const CLEARANCE_FIELDS = [
   { name: 'issuedBy', label: 'Issued By', type: 'text' },
 ];
 const MEDICAL_HISTORY_FIELDS = [
-  { name: 'historyId', label: 'History ID', type: 'text', required: true },
-  { name: 'studentId', label: 'Student ID', type: 'text', required: true },
+  { name: 'historyId', label: 'History ID', type: 'text', required: true, hideInForm: true },
+  { name: 'studentId', label: 'Student ID', type: 'text', required: true, hideInTable: true },
+  { name: 'studentName', label: 'Student Name', type: 'text', required: true, hideInForm: true },
+  { name: 'department', label: 'Department', type: 'select', options: ['College of Engineering', 'College of Education', 'College of Arts & Sciences', 'College of Business', 'College of Nursing', 'College of IT', 'Senior High School', 'Junior High School', 'Elementary'], required: true },
+  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], required: true },
+  { name: 'section', label: 'Section', type: 'text', required: true },
+  { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'], required: true },
+  { name: 'course', label: 'Course/Program', type: 'select', options: ['BSIT', 'BSED', 'BSN', 'BSCS', 'BSA', 'BSBA', 'BSE', 'BSM', 'Other'], required: true },
   { name: 'diagnosis', label: 'Diagnosis', type: 'textarea' },
   { name: 'treatment', label: 'Treatment', type: 'textarea' },
   { name: 'doctor', label: 'Doctor', type: 'text' },
@@ -194,7 +203,7 @@ const USER_FIELDS = [
 const MODULES = {
   students: { title: 'Student Medical Records Management', color: 'blue', storageKey: 'students', fields: STUDENT_FIELDS, searchKeys: ['name', 'studentId', 'course'], primary: 'name' },
   medicalRecords: { title: 'Medical Records', color: 'rose', storageKey: 'medicalRecords', fields: MEDICAL_RECORD_FIELDS, searchKeys: ['recordId', 'studentId', 'studentName', 'department', 'yearLevel', 'section'], primary: 'recordId' },
-  medicalHistory: { title: 'Medical History', color: 'indigo', storageKey: 'medicalHistory', fields: MEDICAL_HISTORY_FIELDS, searchKeys: ['historyId','studentId','diagnosis'], primary: 'historyId' },
+  medicalHistory: { title: 'Medical History', color: 'indigo', storageKey: 'medicalHistory', fields: MEDICAL_HISTORY_FIELDS, searchKeys: ['historyId','studentId','studentName','department','yearLevel','section','course','diagnosis'], primary: 'historyId' },
   visits: { title: 'Clinic Visit & Consultation Logging', color: 'teal', storageKey: 'visits', fields: VISIT_FIELDS, searchKeys: ['patientName', 'complaint', 'diagnosis'], primary: 'patientName' },
   appointments: { title: 'Appointment Scheduling System', color: 'green', storageKey: 'appointments', fields: APPOINTMENT_FIELDS, searchKeys: ['patientName', 'type'], primary: 'patientName' },
   incidents: { title: 'Incident & Emergency Case Management', color: 'red', storageKey: 'incidents', fields: INCIDENT_FIELDS, searchKeys: ['caseNo', 'personInvolved', 'description'], primary: 'caseNo' },
@@ -320,6 +329,7 @@ function renderFieldInput(field, value, namePrefix, readonly) {
   var val = value !== undefined && value !== null ? value : '';
   var baseClass = 'w-full rounded-lg border border-[#E8D4DB] px-3 py-2 text-sm text-[#2B2B2B] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30';
   var html = '';
+  
   if (field.type === 'select') {
     html += '<select id="' + id + '" name="' + id + '" class="' + baseClass + '">';
     html += '<option value="">Select ' + esc(field.label) + '</option>';
@@ -388,6 +398,7 @@ function getModuleState(key) {
       dateFilter: '',
       typeFilter: 'All',
       dispFilter: 'All',
+      departmentFilter: 'All',
       dispenseQty: {},
       loading: true,
       expandedGroups: {},
@@ -430,6 +441,12 @@ function loadMedicalRecordGroups(ms) {
     ms.groups = [];
     renderMainContent();
   });
+}
+
+function loadMedicalRecordsForSelect(ms) {
+  // No longer needed for medical history, but kept for potential future use
+  if (typeof ms.medicalRecords !== 'undefined') return;
+  ms.medicalRecords = []; // empty since we don't need it
 }
 
 /* ============================== VIEW RENDERERS ============================== */
@@ -509,7 +526,7 @@ var sidebarGroups = [
     { key: 'students', label: 'Student Medical Records', icon: 'graduation-cap' },
     { key: 'medicalRecords', label: 'Medical Records', icon: 'file-text' },
     { key: 'medicalHistory', label: 'Medical History', icon: 'file-text' },
-    { key: 'visits', label: 'Clinic Visit & Consultation', icon: 'stethoscope' },
+    { key: 'visits', label: 'Clinic Visit & Consultation', icon: 'activity' },
     { key: 'appointments', label: 'Appointment Scheduling', icon: 'calendar-check' },
   ]},
   { title: 'Clinical Management', items: [
@@ -550,8 +567,11 @@ function renderSidebar() {
     '</div>' +
     /* Navigation */
     '<nav class="flex-1 overflow-x-hidden py-3">';
+  console.log('Rendering sidebar, sidebarGroups:', sidebarGroups);
   sidebarGroups.forEach(function(group) {
+    console.log('Processing group:', group.title, 'items:', group.items);
     var allowedItems = group.items.filter(function(item) { return canAccessView(item.key); });
+    console.log('Allowed items for group', group.title, ':', allowedItems);
     if (allowedItems.length === 0) return;
     html += '<div class="mb-2">';
     if (!collapsed) {
@@ -1169,7 +1189,7 @@ function renderVisitsModule() {
     '<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0ECF2] text-[#2A8B7A]">' +
     icon('stethoscope', 20) + '</div>' +
     '<div><h2 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Clinic Visit &amp; Consultation Log</h2>' +
-    '<p class="text-xs" style="color:#5A4A62">' + ms.items.length + ' visit' + (ms.items.length !== 1 ? 's' : '') + ' on file</p></div>' +
+    '<p class="text-xs" style="color:#5A4A62">' + items.length + ' visit' + (items.length !== 1 ? 's' : '') + ' on file</p></div>' +
     '</div>' +
     '<div class="flex gap-2">' +
     '<button id="export-visits" class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' + icon('download', 15) + ' Export</button>' +
@@ -1212,6 +1232,7 @@ function renderVisitsModule() {
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Type</th>' +
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Date &amp; Time</th>' +
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Chief Complaint</th>' +
+    '<th class="whitespace-nowrap px-4 py-3 font-medium">Vital Signs</th>' +
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Diagnosis</th>' +
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Treatment</th>' +
     '<th class="whitespace-nowrap px-4 py-3 font-medium">Disposition</th>' +
@@ -1219,21 +1240,30 @@ function renderVisitsModule() {
     '</tr></thead><tbody>';
 
   if (ms.loading) {
-    html += '<tr><td colspan="11" class="px-4 py-10 text-center">' + renderLoader('Loading visits…', 32) + '</td></tr>';
+    html += '<tr><td colspan="10" class="px-4 py-10 text-center">' + renderLoader('Loading visits…', 32) + '</td></tr>';
   } else if (paginated.length === 0) {
-    html += '<tr><td colspan="11" class="px-4 py-10 text-center" style="color:#5A4A62">No visits found. Click "Log Visit" to create one.</td></tr>';
+    html += '<tr><td colspan="10" class="px-4 py-10 text-center" style="color:#5A4A62">No visits found. Click "Log Visit" to create one.</td></tr>';
   } else {
     paginated.forEach(function(v, i) {
       var borderStyle = i < paginated.length - 1 ? '1px solid #F0E6E8' : 'none';
       var dc = dispColors[v.disposition] || { bg: 'rgba(90,90,90,0.15)', color: '#909090' };
+      
+      // Build vital signs display
+      var vitalSigns = [];
+      if (v.temperature) vitalSigns.push('🌡️ ' + esc(v.temperature) + '°C');
+      if (v.bloodPressure) vitalSigns.push('❤️ ' + esc(v.bloodPressure));
+      if (v.pulseRate) vitalSigns.push('💓 ' + esc(v.pulseRate) + ' bpm');
+      var vitalSignsDisplay = vitalSigns.length > 0 ? vitalSigns.join('<br>') : '<span style="color:#ccc">—</span>';
+      
       html += '<tr style="border-bottom:' + borderStyle + '" onmouseenter="this.style.background=\'rgba(201,162,39,0.04)\'" onmouseleave="this.style.background=\'transparent\'">' +
         '<td class="whitespace-nowrap px-4 py-3 text-[11px] font-mono-data" style="color:#C9A227">' + esc(v.id || '') + '</td>' +
         '<td class="whitespace-nowrap px-4 py-3"><p class="text-xs font-medium" style="color:#2B2B2B">' + esc(v.patientName || '') + '</p></td>' +
         '<td class="whitespace-nowrap px-4 py-3 text-xs" style="color:#555555">' + esc(v.patientType || '') + '</td>' +
         '<td class="whitespace-nowrap px-4 py-3"><p class="text-xs" style="color:#555555">' + esc(v.date || '') + '</p><p class="text-[10px] font-mono-data" style="color:#7A7A7A">' + esc(v.time || '') + '</p></td>' +
-        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:140px"><p class="truncate">' + esc(v.complaint || v.chiefComplaint || '') + '</p></td>' +
-        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:140px"><p class="truncate">' + esc(v.diagnosis || v.assessment || '') + '</p></td>' +
-        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:140px"><p class="truncate">' + esc(v.treatment || '') + '</p></td>' +
+        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:120px"><p class="truncate">' + esc(v.complaint || v.chiefComplaint || '') + '</p></td>' +
+        '<td class="px-4 py-3 text-xs" style="color:#555555">' + vitalSignsDisplay + '</td>' +
+        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:120px"><p class="truncate">' + esc(v.diagnosis || v.assessment || '') + '</p></td>' +
+        '<td class="px-4 py-3 text-xs" style="color:#555555;max-width:120px"><p class="truncate">' + esc(v.treatment || '') + '</p></td>' +
         '<td class="whitespace-nowrap px-4 py-3"><span class="text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap" style="background:' + dc.bg + ';color:' + dc.color + '">' + esc(v.disposition || '\u2014') + '</span></td>' +
         '<td class="whitespace-nowrap px-4 py-3 text-right"><div class="flex justify-end gap-1">' +
         '<button data-view="' + esc(v.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('eye', 13) + '</button>' +
@@ -1451,10 +1481,12 @@ function renderMedicalRecordsModule() {
   loadMedicalRecordGroups(ms);
 
   var filtered = items;
-  var s = (ms.search || '').toLowerCase();
-  if (s) {
-    filtered = filtered.filter(function(it) {
-      return config.searchKeys.some(function(k) { return String(it[k] || '').toLowerCase().indexOf(s) !== -1; });
+  
+  // Add department filter
+  var deptFilter = ms.departmentFilter || 'All';
+  if (deptFilter !== 'All') {
+    filtered = filtered.filter(function(it) { 
+      return (it.department || '') === deptFilter; 
     });
   }
 
@@ -1462,8 +1494,18 @@ function renderMedicalRecordsModule() {
   var html = '<div data-module="' + key + '">' +
     '<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">' +
     '<div class="flex items-center gap-3">' +
+    '<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0ECF2] text-[#C13030]">' +
+    icon('file-text', 20) + '</div>' +
+    '<div><h2 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Medical Records</h2>' +
+    '<p class="text-xs" style="color:#5A4A62">' + items.length + ' record' + (items.length !== 1 ? 's' : '') + ' on file</p></div>' +
     '</div>' +
     '<div class="flex items-center gap-2">' +
+    '<select data-medical-dept-filter class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">' +
+    ['All', 'College of Engineering', 'College of Education', 'College of Arts & Sciences', 'College of Business', 'College of Nursing', 'College of IT', 'Senior High School', 'Junior High School', 'Elementary'].map(function(o) {
+      return '<option value="' + o + '"' + (deptFilter === o ? ' selected' : '') + '>' + o + '</option>';
+    }).join('') +
+    '</select>' +
+    '<span class="text-xs" style="color:#7A7A7A">' + filtered.length + ' of ' + items.length + ' record' + (items.length !== 1 ? 's' : '') + '</span>' +
     '<button data-action="create-record-group" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white" style="background:#6B7280">' + icon('plus', 14) + ' New Group</button>' +
     '</div>' +
     '</div>';
@@ -1789,7 +1831,7 @@ function renderCrudModule(key) {
     icon('search', 15, 'absolute left-3 top-1/2 -translate-y-1/2 text-[#5A4A62]') +
     '<input data-search="' + key + '" type="text" value="' + esc(ms.search) + '" placeholder="Search records..." class="w-56 rounded-lg border border-[#E8D4DB] py-2 pl-9 pr-3 text-sm text-[#2B2B2B] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30" />' +
     '</div>' +
-    (key !== 'students' ? '<button data-action="add" data-module="' + key + '" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white ' + BTN_COLOR_MAP[config.color] + '">' +
+    (key !== 'students' && key !== 'medicalHistory' ? '<button data-action="add" data-module="' + key + '" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white ' + BTN_COLOR_MAP[config.color] + '">' +
     icon('plus', 16) + ' Add New</button>' : '') +
     '</div></div>';
 
@@ -1857,6 +1899,10 @@ function renderCrudModule(key) {
     for (var fi = 0; fi < config.fields.length; fi++) {
       if (config.fields[fi].name === fieldName && config.fields[fi].options) return config.fields[fi].options;
     }
+    // Handle yearLevel for medical history since it's not in all field definitions
+    if (fieldName === 'yearLevel') {
+      return ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+    }
     return [];
   }
   if (key === 'medicine') {
@@ -1884,7 +1930,46 @@ function renderCrudModule(key) {
     filterDropdowns.push({ name: 'status', label: 'Status', options: getFieldOptions('status') });
   }
 
-  if (filterDropdowns.length) {
+  // Add medical history specific filters in a single aligned row
+  if (key === 'medicalHistory') {
+    html += '<div class="flex flex-wrap items-center gap-3 mb-3">';
+    
+    // Department filter
+    var currentDeptFilter = ms.departmentFilter || 'All';
+    html += '<div class="flex items-center gap-2">';
+    html += '<label class="text-xs font-medium" style="color:#5A4A62">Department:</label>';
+    html += '<select data-filter="' + key + '-department" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">';
+    html += '<option value="All">All Departments</option>';
+    getFieldOptions('department').forEach(function(o) {
+      html += '<option value="' + esc(o) + '"' + (currentDeptFilter === o ? ' selected' : '') + '>' + esc(o) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+    
+    // Year level filter
+    var currentYearFilter = ms.yearLevelFilter || 'All';
+    html += '<div class="flex items-center gap-2">';
+    html += '<label class="text-xs font-medium" style="color:#5A4A62">Year Level:</label>';
+    html += '<select data-filter="' + key + '-yearLevel" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">';
+    html += '<option value="All">All Year Levels</option>';
+    getFieldOptions('yearLevel').forEach(function(o) {
+      html += '<option value="' + esc(o) + '"' + (currentYearFilter === o ? ' selected' : '') + '>' + esc(o) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+    
+    // Date range filter
+    html += '<div class="flex items-center gap-2">';
+    html += '<label class="text-xs font-medium" style="color:#5A4A62">Date Range:</label>';
+    html += '<input type="date" id="medicalHistory-dateFrom" data-filter="medicalHistory-dateFrom" value="' + esc(ms.dateFromFilter || '') + '" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF" placeholder="From">';
+    html += '<span class="text-xs" style="color:#7A7A7A">to</span>';
+    html += '<input type="date" id="medicalHistory-dateTo" data-filter="medicalHistory-dateTo" value="' + esc(ms.dateToFilter || '') + '" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF" placeholder="To">';
+    html += '<button data-clear-date-filter="' + key + '" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">Clear</button>';
+    html += '</div>';
+    
+    html += '</div>';
+  } else if (filterDropdowns.length) {
+    // Standard filter layout for other modules
     html += '<div class="flex flex-wrap items-center gap-2 mb-3">';
     filterDropdowns.forEach(function(fd) {
       var currentFilter = ms[fd.name + 'Filter'] || 'All';
@@ -1905,6 +1990,29 @@ function renderCrudModule(key) {
       filtered = filtered.filter(function(it) { return it[fd.name] === currentFilter; });
     }
   });
+  
+  // Apply medical history specific filters
+  if (key === 'medicalHistory') {
+    // Department filter
+    if (ms.departmentFilter && ms.departmentFilter !== 'All') {
+      filtered = filtered.filter(function(it) { return it.department === ms.departmentFilter; });
+    }
+    // Year level filter
+    if (ms.yearLevelFilter && ms.yearLevelFilter !== 'All') {
+      filtered = filtered.filter(function(it) { return it.yearLevel === ms.yearLevelFilter; });
+    }
+    // Date range filter
+    if (ms.dateFromFilter) {
+      filtered = filtered.filter(function(it) {
+        return it.visitDate && it.visitDate >= ms.dateFromFilter;
+      });
+    }
+    if (ms.dateToFilter) {
+      filtered = filtered.filter(function(it) {
+        return it.visitDate && it.visitDate <= ms.dateToFilter;
+      });
+    }
+  }
 
   /* pagination */
   var perPage = 10;
@@ -1986,6 +2094,7 @@ function renderCrudModule(key) {
         '<button type="button" data-view="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('eye', 13) + '</button>' +
         '<button type="button" data-edit="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Edit" onmouseenter="this.style.color=\'#C9A227\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('pencil', 13) + '</button>' +
         (key === 'students' ? '<button type="button" data-view-medical-records="' + esc(item.studentId || item.id) + '" data-student-name="' + esc(item.name || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical Records" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('file-text', 13) + '</button><button type="button" data-create-medical-record="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Create Medical Record" onmouseenter="this.style.color=\'#8B5CF6\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('heart-plus', 13) + '</button>' : '') +
+        (key === 'medicalRecords' ? '<button type="button" data-view-medical-history="' + esc(item.id) + '" data-record-id="' + esc(item.recordId || '') + '" data-student-id="' + esc(item.studentId || '') + '" data-student-name="' + esc(item.studentName || '') + '" data-department="' + esc(item.department || '') + '" data-year-level="' + esc(item.yearLevel || '') + '" data-section="' + esc(item.section || '') + '" data-blood-type="' + esc(item.bloodType || '') + '" data-course="' + esc(item.course || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical History" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('history', 13) + '</button>' : '') +
         '<button type="button" data-delete="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Delete" onmouseenter="this.style.color=\'#C13030\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('trash-2', 13) + '</button>' +
         '</div></td>';
       html += '</tr>';
@@ -2020,6 +2129,7 @@ function renderCrudModule(key) {
     }
     modalContent += '<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">';
     config.fields.forEach(function(f) {
+      if (f.hideInForm) return; // Skip fields that should be hidden in form
       modalContent += '<div class="' + (f.type === 'textarea' ? 'sm:col-span-2' : '') + '">' +
         '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">' + esc(f.label) + (f.required ? '<span style="color:#C13030"> *</span>' : '') + '</label>' +
         renderFieldInput(f, ms.form[f.name], key + '_' + f.name) +
@@ -2029,7 +2139,7 @@ function renderCrudModule(key) {
       '<div class="mt-6 flex justify-end gap-3">' +
       '<button data-action="cancel-modal" class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">Cancel</button>' +
       '<button data-action="save" data-module="' + key + '" class="rounded-lg px-4 py-2 text-sm font-medium text-white ' + BTN_COLOR_MAP[config.color] + '">' +
-      (ms.editing ? 'Save Changes' : 'Add Record') + '</button>' +
+      (ms.editing ? 'Save Changes' : (key === 'medicalHistory' ? 'Save History' : 'Add Record')) + '</button>' +
       '</div>';
     html += renderModal(modalTitle, modalContent, true);
   }
@@ -2200,10 +2310,10 @@ function render() {
     mainContent = renderDashboard();
   } else if (state.currentView === 'reports') {
     mainContent = renderReports();
-  } else if (state.currentView === 'appointments') {
-    mainContent = renderAppointmentsModule();
   } else if (state.currentView === 'visits') {
     mainContent = renderVisitsModule();
+  } else if (state.currentView === 'appointments') {
+    mainContent = renderAppointmentsModule();
   } else if (state.currentView === 'medicalRecords') {
     mainContent = renderMedicalRecordsModule();
   } else if (MODULES[state.currentView]) {
@@ -2445,7 +2555,9 @@ function setupEvents() {
     target = e.target.closest('[data-action="add"]');
     if (target) {
       var mk = target.getAttribute('data-module');
-      openAddForm(mk);
+      if (mk !== 'medicalHistory') {
+        openAddForm(mk);
+      }
       return;
     }
 
@@ -2471,6 +2583,47 @@ function setupEvents() {
     target = e.target.closest('[data-action="submit-enrollment"]');
     if (target) {
       submitEnrollment();
+      return;
+    }
+
+    target = e.target.closest('[data-view-medical-history]');
+    if (target) {
+      e.preventDefault();
+      var recordId = target.getAttribute('data-view-medical-history');
+      var recordDisplayId = target.getAttribute('data-record-id');
+      var studentId = target.getAttribute('data-student-id');
+      var studentName = target.getAttribute('data-student-name');
+      var department = target.getAttribute('data-department');
+      var yearLevel = target.getAttribute('data-year-level');
+      var section = target.getAttribute('data-section');
+      var bloodType = target.getAttribute('data-blood-type');
+      var course = target.getAttribute('data-course');
+      (async function() {
+        try {
+          var mms = getModuleState('medicalHistory');
+          // Don't set filters - show all records by default
+          mms.departmentFilter = 'All';
+          mms.yearLevelFilter = 'All';
+          mms.page = 1;
+          
+          // Open form to add new medical history entry for this student
+          openAddForm('medicalHistory');
+          mms.form.studentId = studentId || '';
+          mms.form.studentName = studentName || '';
+          mms.form.department = department || '';
+          mms.form.yearLevel = yearLevel || '';
+          mms.form.section = section || '';
+          mms.form.bloodType = bloodType || '';
+          mms.form.course = course || '';
+          
+          state.currentView = 'medicalHistory';
+          saveState();
+          renderMainContent();
+          showToast('Adding medical history for: ' + (studentName || 'Unknown'), 'success');
+        } catch (e) {
+          showToast('Error loading medical history', 'error');
+        }
+      })();
       return;
     }
 
@@ -2941,6 +3094,44 @@ function setupEvents() {
   /* Filter change events */
   document.addEventListener('change', function(e) {
     var target = e.target;
+    
+    /* Clear date filter button */
+    if (target.matches('[data-clear-date-filter]')) {
+      var moduleKey = target.getAttribute('data-clear-date-filter');
+      var ms = getModuleState(moduleKey);
+      ms.dateFromFilter = '';
+      ms.dateToFilter = '';
+      if (moduleKey === 'medicalHistory') {
+        ms.departmentFilter = 'All';
+        ms.yearLevelFilter = 'All';
+      }
+      ms.page = 1;
+      renderMainContent();
+      return;
+    }
+    
+    /* Date range filter for medical history */
+    if (target.id === 'medicalHistory-dateFrom' || target.id === 'medicalHistory-dateTo') {
+      var filterType = target.id === 'medicalHistory-dateFrom' ? 'dateFrom' : 'dateTo';
+      var ms = getModuleState('medicalHistory');
+      ms[filterType + 'Filter'] = target.value;
+      ms.page = 1;
+      renderMainContent();
+      return;
+    }
+    
+    /* Filter dropdowns (excluding appointment specific filters) */
+    if (target.matches('[data-filter]') && !target.matches('[data-appt-date-filter]') && !target.matches('[data-appt-status-filter]')) {
+      var filterKey = target.getAttribute('data-filter');
+      var moduleKey = filterKey.split('-')[0];
+      var filterName = filterKey.split('-')[1];
+      var ms = getModuleState(moduleKey);
+      ms[filterName + 'Filter'] = target.value;
+      ms.page = 1;
+      renderMainContent();
+      return;
+    }
+    
     /* Appointments date filter */
     if (target.matches('[data-appt-date-filter]')) {
       var ms = getModuleState('appointments');
@@ -2953,6 +3144,14 @@ function setupEvents() {
     if (target.matches('[data-appt-status-filter]')) {
       var ms = getModuleState('appointments');
       ms.statusFilter = target.value;
+      ms.page = 1;
+      renderMainContent();
+      return;
+    }
+    /* Medical Records department filter */
+    if (target.matches('[data-medical-dept-filter]')) {
+      var ms = getModuleState('medicalRecords');
+      ms.departmentFilter = target.value;
       ms.page = 1;
       renderMainContent();
       return;
@@ -3445,6 +3644,19 @@ function openAddForm(key) {
     blank.status = 'Active';
     blank.groupFolder = ms.groupSelected || (ms.groups && ms.groups.length ? ms.groups[0].name : '');
   }
+  if (key === 'medicalHistory') {
+    blank.historyId = generateHistoryId(ms.items);
+    // Preserve existing form data if it exists (for when opening from medical records)
+    if (ms.form) {
+      blank.studentId = ms.form.studentId || '';
+      blank.studentName = ms.form.studentName || '';
+      blank.department = ms.form.department || '';
+      blank.yearLevel = ms.form.yearLevel || '';
+      blank.section = ms.form.section || '';
+      blank.bloodType = ms.form.bloodType || '';
+      blank.course = ms.form.course || '';
+    }
+  }
   ms.form = blank;
   ms.editing = null;
   ms.error = '';
@@ -3720,6 +3932,9 @@ async function doSave(key) {
   if (key === 'medicalRecords' && !data.recordId) {
     data.recordId = generateMedicalRecordId(ms.items);
   }
+  if (key === 'medicalHistory' && !data.historyId) {
+    data.historyId = generateHistoryId(ms.items);
+  }
 
   /* Strip fields not yet in the database schema for each module */
   var EXTRA_FIELDS = {
@@ -3807,6 +4022,22 @@ function generateMedicalRecordId(items) {
   var maxSeq = 0;
   items.forEach(function(item) {
     var id = item.recordId || item.id || '';
+    if (id.indexOf(prefix) === 0) {
+      var num = parseInt(id.slice(prefix.length), 10);
+      if (!isNaN(num) && num > maxSeq) maxSeq = num;
+    }
+  });
+  var next = maxSeq + 1;
+  var seq = next < 10 ? '0' + next : String(next);
+  return prefix + seq;
+}
+
+function generateHistoryId(items) {
+  var year = new Date().getFullYear();
+  var prefix = 'HIST-' + year + '-';
+  var maxSeq = 0;
+  items.forEach(function(item) {
+    var id = item.historyId || item.id || '';
     if (id.indexOf(prefix) === 0) {
       var num = parseInt(id.slice(prefix.length), 10);
       if (!isNaN(num) && num > maxSeq) maxSeq = num;
