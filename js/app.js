@@ -3150,6 +3150,13 @@ async function submitEnrollment() {
   data.contactNumber = data.contactNumber || '';
   data.emergencyContact = data.emergencyContact || '';
 
+  if (!API.getToken()) {
+    ms.enrollmentError = 'Your session expired. Please log in again.';
+    showToast(ms.enrollmentError, 'error');
+    renderMainContent();
+    return;
+  }
+
   try {
     await API.create('students', data);
     ms.enrollmentModalOpen = false;

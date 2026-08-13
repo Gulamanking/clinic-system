@@ -305,29 +305,24 @@
       data.contactNumber = data.contactNumber || '';
       data.emergencyContact = data.emergencyContact || '';
 
+      if (!API.getToken()) {
+        showAlert('Please log in first, then try enrolling again.', 'error');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 2000);
+        return;
+      }
+
       try {
-        const response = await fetch('/backend/index.php/api/students', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          showAlert('Student enrolled successfully! Redirecting to dashboard...', 'success');
-          form.reset();
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 2000);
-        } else {
-          showAlert(result.error || 'Failed to enroll student. Please try again.', 'error');
-        }
+        await API.create('students', data);
+        showAlert('Student enrolled successfully! Redirecting to dashboard...', 'success');
+        form.reset();
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 2000);
       } catch (error) {
         console.error('Error:', error);
-        showAlert('Network error. Please check your connection and try again.', 'error');
+        showAlert(error.message || 'Failed to enroll student. Please try again.', 'error');
       }
     });
   </script>

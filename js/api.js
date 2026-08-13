@@ -1,18 +1,42 @@
 const API = (function () {
   let baseUrl = '';
 
+  function resolveBaseUrl() {
+    if (window.API_BASE_URL) {
+      return new URL(window.API_BASE_URL, window.location.href).href.replace(/\/$/, '');
+    }
+    return new URL('backend/index.php', window.location.href).href;
+  }
+
   function getBaseUrl() {
     if (baseUrl) return baseUrl;
+
     var stored = localStorage.getItem('api_base_url');
-    if (stored) { baseUrl = stored; return baseUrl; }
-    if (window.API_BASE_URL) { baseUrl = window.API_BASE_URL; return baseUrl; }
-    var path = window.location.pathname;
-    if (!path.endsWith('/') && !path.includes('.')) {
-      path += '/';
+    if (stored) {
+      try {
+        var storedUrl = new URL(stored, window.location.href);
+        if (storedUrl.origin === window.location.origin) {
+          baseUrl = storedUrl.href.replace(/\/$/, '');
+          return baseUrl;
+        }
+        localStorage.removeItem('api_base_url');
+      } catch (_) {
+        localStorage.removeItem('api_base_url');
+      }
     }
-    var dir = path.substring(0, path.lastIndexOf('/'));
-    baseUrl = (dir || '') + '/backend/index.php';
+
+    baseUrl = resolveBaseUrl();
     return baseUrl;
+  }
+
+  function networkErrorMessage(err) {
+    if (window.location.protocol === 'file:') {
+      return 'Cannot reach the server. Open the app through XAMPP at http://localhost/clinic-system/ (do not open the HTML file directly).';
+    }
+    if (err && err.message === 'Failed to fetch') {
+      return 'Cannot reach the server. Make sure Apache and MySQL are running in XAMPP, then reload this page.';
+    }
+    return (err && err.message) || 'Network request failed.';
   }
 
   function setBaseUrl(url) {
@@ -62,7 +86,13 @@ const API = (function () {
     if (body !== undefined) {
       opts.body = JSON.stringify(body);
     }
-    const res = await fetch(url, opts);
+
+    var res;
+    try {
+      res = await fetch(url, opts);
+    } catch (err) {
+      throw new Error(networkErrorMessage(err));
+    }
     if (!res.ok) {
       var errorMsg = 'Request failed with status ' + res.status;
       try {
