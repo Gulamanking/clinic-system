@@ -2998,17 +2998,17 @@ function renderCrudModule(key) {
     return [];
   }
   if (key === 'medicine') {
-    filterDropdowns.push({ name: 'category', label: 'Category', options: getFieldOptions('category') });
+    filterDropdowns.push({ name: 'category', label: 'Category', plural: 'Categories', options: getFieldOptions('category') });
   }
   // Removed blood type filter for students
   // if (key === 'students') {
   //   filterDropdowns.push({ name: 'bloodType', label: 'Blood Type', options: getFieldOptions('bloodType') });
   // }
   if (key === 'incidents') {
-    filterDropdowns.push({ name: 'severity', label: 'Severity', options: getFieldOptions('severity') });
+    filterDropdowns.push({ name: 'severity', label: 'Severity', plural: 'Severities', options: getFieldOptions('severity') });
   }
   if (key === 'programs') {
-    filterDropdowns.push({ name: 'category', label: 'Category', options: getFieldOptions('category') });
+    filterDropdowns.push({ name: 'category', label: 'Category', plural: 'Categories', options: getFieldOptions('category') });
   }
   if (key === 'clearance') {
     filterDropdowns.push({ name: 'clearanceType', label: 'Type', options: getFieldOptions('clearanceType') });
@@ -3019,7 +3019,7 @@ function renderCrudModule(key) {
   /* Status filter for modules with status field */
   var hasStatus = config.fields.some(function(f) { return f.name === 'status'; });
   if (hasStatus && key !== 'appointments') {
-    filterDropdowns.push({ name: 'status', label: 'Status', options: getFieldOptions('status') });
+    filterDropdowns.push({ name: 'status', label: 'Status', plural: 'Statuses', options: getFieldOptions('status') });
   }
 
   // Add medical history specific filters in a single aligned row
@@ -3066,7 +3066,7 @@ function renderCrudModule(key) {
     filterDropdowns.forEach(function(fd) {
       var currentFilter = ms[fd.name + 'Filter'] || 'All';
       html += '<select data-filter="' + key + '-' + fd.name + '" class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">' +
-        '<option value="All">All ' + fd.label + 's</option>';
+        '<option value="All">All ' + (fd.plural || (fd.label + 's')) + '</option>';
       fd.options.forEach(function(o) {
         html += '<option value="' + esc(o) + '"' + (currentFilter === o ? ' selected' : '') + '>' + esc(o) + '</option>';
       });

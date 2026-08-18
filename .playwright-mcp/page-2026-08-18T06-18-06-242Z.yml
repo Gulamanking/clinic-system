@@ -1,0 +1,100 @@
+- generic [ref=f32e2]:
+  - complementary [ref=f32e3]:
+    - generic [ref=f32e9]:
+      - paragraph [ref=f32e10]: School Clinic
+      - paragraph [ref=f32e11]: Management System
+    - navigation [ref=f32e12]:
+      - generic [ref=f32e13]:
+        - paragraph [ref=f32e14]: Overview
+        - button "Dashboard" [ref=f32e15] [cursor=pointer]
+      - generic [ref=f32e22]:
+        - paragraph [ref=f32e23]: Patient Services
+        - button "Student Medical Records" [ref=f32e24] [cursor=pointer]
+        - button "Medical Records" [ref=f32e29] [cursor=pointer]
+        - button "Medical History" [ref=f32e34] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f32e39] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f32e43] [cursor=pointer]
+      - generic [ref=f32e48]:
+        - paragraph [ref=f32e49]: Clinical Management
+        - button "Medicine Inventory" [ref=f32e50] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f32e55] [cursor=pointer]
+      - generic [ref=f32e60]:
+        - paragraph [ref=f32e61]: Health Services
+        - button "Faculty & Staff Health" [ref=f32e62] [cursor=pointer]
+        - button "Health Programs" [ref=f32e69] [cursor=pointer]
+        - button "Health Clearance" [ref=f32e73] [cursor=pointer]
+      - generic [ref=f32e78]:
+        - paragraph [ref=f32e79]: Administration
+        - button "Reporting & Compliance" [ref=f32e80] [cursor=pointer]
+        - button "User Access Control" [ref=f32e85] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f32e89] [cursor=pointer]
+    - generic [ref=f32e96]:
+      - generic [ref=f32e97]: "N"
+      - generic [ref=f32e98]:
+        - paragraph [ref=f32e99]: Nurse Admin
+        - paragraph [ref=f32e100]: Clinic Administrator
+      - button "Logout" [ref=f32e101] [cursor=pointer]
+    - button [ref=f32e105] [cursor=pointer]
+  - generic [ref=f32e108]:
+    - banner [ref=f32e109]:
+      - generic [ref=f32e111]:
+        - generic [ref=f32e112]: School Clinic
+        - generic [ref=f32e115]: Incident & Emergency Case Management
+      - generic [ref=f32e116]:
+        - generic [ref=f32e117]:
+          - paragraph [ref=f32e118]: 02:18 PM
+          - paragraph [ref=f32e119]: Tue, Aug 18, 2026
+        - button [ref=f32e121] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f32e126] [cursor=pointer]:
+          - generic [ref=f32e127]: "N"
+          - generic [ref=f32e128]: Nurse Admin
+    - main [ref=f32e129]:
+      - generic [ref=f32e130]:
+        - generic [ref=f32e131]:
+          - generic [ref=f32e136]:
+            - heading "Incident & Emergency Case Management" [level=2] [ref=f32e137]
+            - paragraph [ref=f32e138]: 0 records on file
+          - generic [ref=f32e139]:
+            - textbox "Search records..." [ref=f32e144]
+            - button "Add New" [ref=f32e145] [cursor=pointer]
+        - generic [ref=f32e147]:
+          - generic [ref=f32e148]:
+            - paragraph [ref=f32e149]: "0"
+            - paragraph [ref=f32e150]: Open
+          - generic [ref=f32e151]:
+            - paragraph [ref=f32e152]: "0"
+            - paragraph [ref=f32e153]: Under Investigation
+          - generic [ref=f32e154]:
+            - paragraph [ref=f32e155]: "0"
+            - paragraph [ref=f32e156]: Resolved
+        - generic [ref=f32e157]:
+          - combobox [ref=f32e158]:
+            - option "All Severities" [selected]
+            - option "Low"
+            - option "Moderate"
+            - option "High"
+            - option "Critical"
+          - combobox [ref=f32e159]:
+            - option "All Statuses" [selected]
+            - option "Open"
+            - option "Under Investigation"
+            - option "Resolved"
+        - generic [ref=f32e160]: 0 records
+        - table [ref=f32e164]:
+          - rowgroup [ref=f32e165]:
+            - row [ref=f32e166]:
+              - columnheader "Case Number" [ref=f32e167]
+              - columnheader "Date" [ref=f32e168]
+              - columnheader "Person Involved" [ref=f32e169]
+              - columnheader "Location" [ref=f32e170]
+              - columnheader "Severity" [ref=f32e171]
+              - columnheader "Status" [ref=f32e172]
+              - columnheader "Actions" [ref=f32e173]
+          - rowgroup [ref=f32e174]:
+            - row [ref=f32e175]:
+              - cell "No records found. Click \"Add New\" to create one." [ref=f32e176]
+        - generic [ref=f32e177]:
+          - paragraph [ref=f32e178]: Showing 0 of 0
+          - generic [ref=f32e179]:
+            - button [disabled] [ref=f32e180]
+            - button [disabled] [ref=f32e183]

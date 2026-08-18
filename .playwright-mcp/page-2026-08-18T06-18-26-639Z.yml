@@ -1,0 +1,101 @@
+- generic [ref=f32e2]:
+  - complementary [ref=f32e375]:
+    - generic [ref=f32e381]:
+      - paragraph [ref=f32e382]: School Clinic
+      - paragraph [ref=f32e383]: Management System
+    - navigation [ref=f32e384]:
+      - generic [ref=f32e385]:
+        - paragraph [ref=f32e386]: Overview
+        - button "Dashboard" [ref=f32e387] [cursor=pointer]
+      - generic [ref=f32e394]:
+        - paragraph [ref=f32e395]: Patient Services
+        - button "Student Medical Records" [ref=f32e396] [cursor=pointer]
+        - button "Medical Records" [ref=f32e401] [cursor=pointer]
+        - button "Medical History" [ref=f32e406] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f32e411] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f32e415] [cursor=pointer]
+      - generic [ref=f32e420]:
+        - paragraph [ref=f32e421]: Clinical Management
+        - button "Medicine Inventory" [ref=f32e422] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f32e428] [cursor=pointer]
+      - generic [ref=f32e432]:
+        - paragraph [ref=f32e433]: Health Services
+        - button "Faculty & Staff Health" [ref=f32e434] [cursor=pointer]
+        - button "Health Programs" [ref=f32e441] [cursor=pointer]
+        - button "Health Clearance" [ref=f32e445] [cursor=pointer]
+      - generic [ref=f32e450]:
+        - paragraph [ref=f32e451]: Administration
+        - button "Reporting & Compliance" [ref=f32e452] [cursor=pointer]
+        - button "User Access Control" [ref=f32e457] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f32e461] [cursor=pointer]
+    - generic [ref=f32e468]:
+      - generic [ref=f32e469]: "N"
+      - generic [ref=f32e470]:
+        - paragraph [ref=f32e471]: Nurse Admin
+        - paragraph [ref=f32e472]: Clinic Administrator
+      - button "Logout" [ref=f32e473] [cursor=pointer]
+    - button [ref=f32e477] [cursor=pointer]
+  - generic [ref=f32e480]:
+    - banner [ref=f32e481]:
+      - generic [ref=f32e483]:
+        - generic [ref=f32e484]: School Clinic
+        - generic [ref=f32e487]: Medicine Inventory & Dispensing
+      - generic [ref=f32e488]:
+        - generic [ref=f32e489]:
+          - paragraph [ref=f32e490]: 02:18 PM
+          - paragraph [ref=f32e491]: Tue, Aug 18, 2026
+        - button [ref=f32e493] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f32e498] [cursor=pointer]:
+          - generic [ref=f32e499]: "N"
+          - generic [ref=f32e500]: Nurse Admin
+    - main [ref=f32e501]:
+      - generic [ref=f32e502]:
+        - generic [ref=f32e503]:
+          - generic [ref=f32e509]:
+            - heading "Medicine Inventory & Dispensing" [level=2] [ref=f32e510]
+            - paragraph [ref=f32e511]: 0 records on file
+          - generic [ref=f32e512]:
+            - textbox "Search records..." [ref=f32e517]
+            - button "Add New" [ref=f32e518] [cursor=pointer]
+        - generic [ref=f32e520]:
+          - generic [ref=f32e521]:
+            - paragraph [ref=f32e522]: "0"
+            - paragraph [ref=f32e523]: Total Items
+          - generic [ref=f32e524]:
+            - paragraph [ref=f32e525]: "0"
+            - paragraph [ref=f32e526]: In Stock
+          - generic [ref=f32e527]:
+            - paragraph [ref=f32e528]: "0"
+            - paragraph [ref=f32e529]: Low Stock
+          - generic [ref=f32e530]:
+            - paragraph [ref=f32e531]: "0"
+            - paragraph [ref=f32e532]: Out of Stock
+        - combobox [ref=f32e534]:
+          - option "All Categories" [selected]
+          - option "Antibiotic"
+          - option "Analgesic"
+          - option "Antihistamine"
+          - option "Antipyretic"
+          - option "First Aid"
+          - option "Vitamins"
+          - option "Other"
+        - generic [ref=f32e535]: 0 records
+        - table [ref=f32e539]:
+          - rowgroup [ref=f32e540]:
+            - row [ref=f32e541]:
+              - columnheader "Medicine Name" [ref=f32e542]
+              - columnheader "Category" [ref=f32e543]
+              - columnheader "Stock Quantity" [ref=f32e544]
+              - columnheader "Unit" [ref=f32e545]
+              - columnheader "Expiry Date" [ref=f32e546]
+              - columnheader "Reorder Level" [ref=f32e547]
+              - columnheader "Dispense" [ref=f32e548]
+              - columnheader "Actions" [ref=f32e549]
+          - rowgroup [ref=f32e550]:
+            - row [ref=f32e551]:
+              - cell "No records found. Click \"Add New\" to create one." [ref=f32e552]
+        - generic [ref=f32e553]:
+          - paragraph [ref=f32e554]: Showing 0 of 0
+          - generic [ref=f32e555]:
+            - button [disabled] [ref=f32e556]
+            - button [disabled] [ref=f32e559]

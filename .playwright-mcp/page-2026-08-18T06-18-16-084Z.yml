@@ -1,0 +1,87 @@
+- generic [ref=f32e2]:
+  - complementary [ref=f32e186]:
+    - generic [ref=f32e192]:
+      - paragraph [ref=f32e193]: School Clinic
+      - paragraph [ref=f32e194]: Management System
+    - navigation [ref=f32e195]:
+      - generic [ref=f32e196]:
+        - paragraph [ref=f32e197]: Overview
+        - button "Dashboard" [ref=f32e198] [cursor=pointer]
+      - generic [ref=f32e205]:
+        - paragraph [ref=f32e206]: Patient Services
+        - button "Student Medical Records" [ref=f32e207] [cursor=pointer]
+        - button "Medical Records" [ref=f32e213] [cursor=pointer]
+        - button "Medical History" [ref=f32e218] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f32e223] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f32e227] [cursor=pointer]
+      - generic [ref=f32e232]:
+        - paragraph [ref=f32e233]: Clinical Management
+        - button "Medicine Inventory" [ref=f32e234] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f32e239] [cursor=pointer]
+      - generic [ref=f32e243]:
+        - paragraph [ref=f32e244]: Health Services
+        - button "Faculty & Staff Health" [ref=f32e245] [cursor=pointer]
+        - button "Health Programs" [ref=f32e252] [cursor=pointer]
+        - button "Health Clearance" [ref=f32e256] [cursor=pointer]
+      - generic [ref=f32e261]:
+        - paragraph [ref=f32e262]: Administration
+        - button "Reporting & Compliance" [ref=f32e263] [cursor=pointer]
+        - button "User Access Control" [ref=f32e268] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f32e272] [cursor=pointer]
+    - generic [ref=f32e279]:
+      - generic [ref=f32e280]: "N"
+      - generic [ref=f32e281]:
+        - paragraph [ref=f32e282]: Nurse Admin
+        - paragraph [ref=f32e283]: Clinic Administrator
+      - button "Logout" [ref=f32e284] [cursor=pointer]
+    - button [ref=f32e288] [cursor=pointer]
+  - generic [ref=f32e291]:
+    - banner [ref=f32e292]:
+      - generic [ref=f32e294]:
+        - generic [ref=f32e295]: School Clinic
+        - generic [ref=f32e298]: Student Medical Records Management
+      - generic [ref=f32e299]:
+        - generic [ref=f32e300]:
+          - paragraph [ref=f32e301]: 02:18 PM
+          - paragraph [ref=f32e302]: Tue, Aug 18, 2026
+        - button [ref=f32e304] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f32e309] [cursor=pointer]:
+          - generic [ref=f32e310]: "N"
+          - generic [ref=f32e311]: Nurse Admin
+    - main [ref=f32e312]:
+      - generic [ref=f32e313]:
+        - generic [ref=f32e314]:
+          - generic [ref=f32e320]:
+            - heading "Student Medical Records Management" [level=2] [ref=f32e321]
+            - paragraph [ref=f32e322]: 0 records on file
+          - textbox "Search records..." [ref=f32e328]
+        - combobox [ref=f32e330]:
+          - option "All Statuses" [selected]
+          - option "Active"
+          - option "Inactive"
+        - generic [ref=f32e331]: 0 records
+        - generic [ref=f32e333]:
+          - generic [ref=f32e334]:
+            - button "Enroll New Student" [ref=f32e335] [cursor=pointer]
+            - button "Import Excel" [ref=f32e339] [cursor=pointer]
+            - button "Export Excel" [ref=f32e343] [cursor=pointer]
+          - link "Download Template" [ref=f32e347] [cursor=pointer]:
+            - /url: students_import_template.csv
+        - table [ref=f32e353]:
+          - rowgroup [ref=f32e354]:
+            - row [ref=f32e355]:
+              - columnheader "Full Name" [ref=f32e356]
+              - columnheader "Student ID" [ref=f32e357]
+              - columnheader "Course / Program" [ref=f32e358]
+              - columnheader "Year Level" [ref=f32e359]
+              - columnheader "Status" [ref=f32e360]
+              - columnheader "Blood Type" [ref=f32e361]
+              - columnheader "Actions" [ref=f32e362]
+          - rowgroup [ref=f32e363]:
+            - row [ref=f32e364]:
+              - cell "No records found. Click \"Add New\" to create one." [ref=f32e365]
+        - generic [ref=f32e366]:
+          - paragraph [ref=f32e367]: Showing 0 of 0
+          - generic [ref=f32e368]:
+            - button [disabled] [ref=f32e369]
+            - button [disabled] [ref=f32e372]
