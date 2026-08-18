@@ -52,41 +52,57 @@ function lookupStudentByVisit(array $visit): ?array {
     return null;
 }
 
-function callClaude(array $payload): array {
+// Google Gemini API (Generative Language API) — key-based auth via a query
+// param, not a header, and a different request/response shape than
+// Anthropic's Messages API. Swapped in because Anthropic API usage isn't
+// free; Gemini has a usable free tier for a capstone-scale project like this.
+function callGemini(array $payload): array {
     $cfg = getConfig();
-    $apiKey = $cfg['anthropic_api_key'] ?? '';
+    $apiKey = $cfg['gemini_api_key'] ?? '';
     if ($apiKey === '') {
         return [
             'ok' => false,
             'configured' => false,
             'status' => 'not_configured',
-            'message' => 'Claude AI is not configured. Add ANTHROPIC_API_KEY to the backend environment to enable the AI assistant.',
+            'message' => 'Gemini AI is not configured. Add GEMINI_API_KEY to the backend environment (or gemini_api_key in config.local.php) to enable the AI assistant.',
         ];
     }
 
-    $model = $cfg['anthropic_model'] ?? 'claude-sonnet-4-5';
+    // Configurable, not hardcoded to one snapshot — Google renames/retires
+    // model versions over time, and whichever one is current on the free
+    // tier when you read this may not match what was current when this was
+    // written. Check https://ai.google.dev/gemini-api/docs/models for the
+    // current name if this default ever starts returning a 404.
+    $model = $cfg['gemini_model'] ?? 'gemini-3.6-flash';
     $userContent = "Patient context (medical only):\n" . json_encode($payload) . "\n\n" .
         "Provide possible causes or contributing factors, general medical information, and factors worth checking further for the recorded diagnosis.";
 
     $body = json_encode([
-        'model' => $model,
-        'max_tokens' => 1000,
-        'system' => AI_SYSTEM_PROMPT,
-        'messages' => [['role' => 'user', 'content' => $userContent]],
+        'system_instruction' => ['parts' => [['text' => AI_SYSTEM_PROMPT]]],
+        'contents' => [['role' => 'user', 'parts' => [['text' => $userContent]]]],
+        'generationConfig' => ['maxOutputTokens' => 1000],
     ]);
 
-    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent?key=' . rawurlencode($apiKey);
+    $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_HTTPHEADER => [
-            'x-api-key: ' . $apiKey,
-            'anthropic-version: 2023-06-01',
-            'Content-Type: application/json',
-        ],
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
         CURLOPT_POSTFIELDS => $body,
-        CURLOPT_TIMEOUT => 30,
+        // Must be comfortably under PHP's own max_execution_time (30s by
+        // default): if curl and PHP's script timer raced at the same value,
+        // a slow Gemini response could hit PHP's limit first and kill the
+        // whole request with an uncaught fatal error instead of the
+        // graceful error response below.
+        CURLOPT_TIMEOUT => 20,
         CURLOPT_SSL_VERIFYPEER => true,
+        // Plain XAMPP/Windows PHP installs frequently ship without a
+        // configured curl.cainfo/openssl.cafile, which makes any HTTPS
+        // curl call fail with "unable to get local issuer certificate" —
+        // bundling a CA file here means every collaborator's request
+        // works out of the box, without editing their php.ini.
+        CURLOPT_CAINFO => __DIR__ . '/cacert.pem',
     ]);
 
     $result = curl_exec($ch);
@@ -96,11 +112,23 @@ function callClaude(array $payload): array {
 
     if ($httpCode >= 200 && $httpCode < 300) {
         $decoded = json_decode($result, true);
+        $parts = $decoded['candidates'][0]['content']['parts'] ?? [];
         $text = '';
-        foreach (($decoded['content'] ?? []) as $block) {
-            if (($block['type'] ?? '') === 'text') {
-                $text .= $block['text'] ?? '';
-            }
+        foreach ($parts as $part) {
+            $text .= $part['text'] ?? '';
+        }
+        if ($text === '') {
+            // Empty candidates usually means the prompt or response was
+            // blocked by Gemini's safety filters, not a transport error.
+            $blockReason = $decoded['promptFeedback']['blockReason'] ?? null;
+            return [
+                'ok' => false,
+                'configured' => true,
+                'status' => 'error',
+                'message' => $blockReason
+                    ? ('Gemini blocked this request (' . $blockReason . ').')
+                    : 'Gemini returned an empty response.',
+            ];
         }
         return [
             'ok' => true,
@@ -110,10 +138,12 @@ function callClaude(array $payload): array {
         ];
     }
 
+    $decoded = json_decode($result, true);
+    $apiMessage = $decoded['error']['message'] ?? null;
     return [
         'ok' => false,
         'configured' => true,
         'status' => 'error',
-        'message' => $error ?: ('Claude API returned HTTP ' . $httpCode),
+        'message' => $apiMessage ?: ($error ?: ('Gemini API returned HTTP ' . $httpCode)),
     ];
 }

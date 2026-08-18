@@ -1,0 +1,167 @@
+- generic [ref=f27e2]:
+  - complementary [ref=f27e446]:
+    - generic [ref=f27e452]:
+      - paragraph [ref=f27e453]: School Clinic
+      - paragraph [ref=f27e454]: Management System
+    - navigation [ref=f27e455]:
+      - generic [ref=f27e456]:
+        - paragraph [ref=f27e457]: Overview
+        - button "Dashboard" [ref=f27e458] [cursor=pointer]
+      - generic [ref=f27e465]:
+        - paragraph [ref=f27e466]: Patient Services
+        - button "Student Medical Records" [ref=f27e467] [cursor=pointer]
+        - button "Medical Records" [ref=f27e472] [cursor=pointer]
+        - button "Medical History" [ref=f27e477] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f27e482] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f27e487] [cursor=pointer]
+      - generic [ref=f27e492]:
+        - paragraph [ref=f27e493]: Clinical Management
+        - button "Medicine Inventory" [ref=f27e494] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f27e499] [cursor=pointer]
+      - generic [ref=f27e503]:
+        - paragraph [ref=f27e504]: Health Services
+        - button "Faculty & Staff Health" [ref=f27e505] [cursor=pointer]
+        - button "Health Programs" [ref=f27e512] [cursor=pointer]
+        - button "Health Clearance" [ref=f27e516] [cursor=pointer]
+      - generic [ref=f27e521]:
+        - paragraph [ref=f27e522]: Administration
+        - button "Reporting & Compliance" [ref=f27e523] [cursor=pointer]
+        - button "User Access Control" [ref=f27e528] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f27e532] [cursor=pointer]
+    - generic [ref=f27e539]:
+      - generic [ref=f27e540]: "N"
+      - generic [ref=f27e541]:
+        - paragraph [ref=f27e542]: Nurse Admin
+        - paragraph [ref=f27e543]: Clinic Administrator
+      - button "Logout" [ref=f27e544] [cursor=pointer]
+    - button [ref=f27e548] [cursor=pointer]
+  - generic [ref=f27e551]:
+    - banner [ref=f27e552]:
+      - generic [ref=f27e554]:
+        - generic [ref=f27e555]: School Clinic
+        - generic [ref=f27e558]: Clinic Visit & Consultation Logging
+      - generic [ref=f27e559]:
+        - generic [ref=f27e560]:
+          - paragraph [ref=f27e561]: 01:12 PM
+          - paragraph [ref=f27e562]: Tue, Aug 18, 2026
+        - button [ref=f27e564] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f27e569] [cursor=pointer]:
+          - generic [ref=f27e570]: "N"
+          - generic [ref=f27e571]: Nurse Admin
+    - main [ref=f27e572]:
+      - generic [ref=f27e693]:
+        - generic [ref=f27e694]:
+          - generic [ref=f27e701]:
+            - heading "Clinic Visit & Consultation Log" [level=2] [ref=f27e702]
+            - paragraph [ref=f27e703]: 0 visits on file
+          - generic [ref=f27e704]:
+            - button "Export" [ref=f27e705] [cursor=pointer]
+            - button "Import" [ref=f27e709] [cursor=pointer]
+            - link "Template" [ref=f27e713] [cursor=pointer]:
+              - /url: visits_import_template.csv
+            - button "Log Visit" [ref=f27e717] [cursor=pointer]
+        - generic [ref=f27e719]:
+          - textbox "Search patient, ID, complaint..." [ref=f27e724]
+          - textbox [ref=f27e725]
+          - combobox [ref=f27e726]:
+            - option "All" [selected]
+            - option "Student"
+            - option "Faculty/Staff"
+          - combobox [ref=f27e727]:
+            - option "All" [selected]
+            - option "Treated & Discharged"
+            - option "Referred to Doctor"
+            - option "Sent Home"
+            - option "Emergency Referral"
+            - option "Observation"
+          - button "Generate" [ref=f27e728] [cursor=pointer]
+          - generic [ref=f27e732]: 0 visits
+        - table [ref=f27e735]:
+          - rowgroup [ref=f27e736]:
+            - row [ref=f27e737]:
+              - columnheader "Visit ID" [ref=f27e738]
+              - columnheader "Patient" [ref=f27e739]
+              - columnheader "Type" [ref=f27e740]
+              - columnheader "Date & Time" [ref=f27e741]
+              - columnheader "Chief Complaint" [ref=f27e742]
+              - columnheader "Vital Signs" [ref=f27e743]
+              - columnheader "Diagnosis" [ref=f27e744]
+              - columnheader "Treatment" [ref=f27e745]
+              - columnheader "Disposition" [ref=f27e746]
+              - columnheader "Actions" [ref=f27e747]
+          - rowgroup [ref=f27e748]:
+            - row [ref=f27e749]:
+              - cell "No visits found. Click \"Log Visit\" to create one." [ref=f27e750]
+        - generic [ref=f27e751]:
+          - paragraph [ref=f27e752]: Showing 0 of 0
+          - generic [ref=f27e753]:
+            - button [disabled] [ref=f27e754]
+            - button [disabled] [ref=f27e757]
+        - generic [ref=f27e761]:
+          - generic [ref=f27e762]:
+            - heading "Log New Clinic Visit" [level=3] [ref=f27e763]
+            - button [ref=f27e764] [cursor=pointer]
+          - generic [ref=f27e768]:
+            - generic [ref=f27e769]:
+              - generic [ref=f27e770]: Link to Existing Record
+              - combobox [ref=f27e771]:
+                - option "— Not yet in the system (walk-in) —" [selected]
+              - paragraph [ref=f27e772]: Selecting a record fills in the patientName fields below and links this entry precisely — avoids mismatches when two people share a name. Leave unselected only for someone not yet enrolled/registered.
+            - generic [ref=f27e773]:
+              - generic [ref=f27e774]:
+                - generic [ref=f27e775]: Visit ID
+                - generic [ref=f27e776]: CV-2026-01
+              - generic [ref=f27e777]:
+                - generic [ref=f27e778]: Patient Name *
+                - textbox [ref=f27e779]
+              - generic [ref=f27e780]:
+                - generic [ref=f27e781]: Patient Type
+                - combobox [ref=f27e782]:
+                  - option "Select Patient Type" [selected]
+                  - option "Student"
+                  - option "Faculty/Staff"
+              - generic [ref=f27e783]:
+                - generic [ref=f27e784]: Date *
+                - textbox [ref=f27e785]: 2026-08-18
+              - generic [ref=f27e786]:
+                - generic [ref=f27e787]: Time
+                - textbox [ref=f27e788]: 13:12
+              - generic [ref=f27e789]:
+                - generic [ref=f27e790]: Chief Complaint
+                - textbox [ref=f27e791]
+              - generic [ref=f27e792]:
+                - generic [ref=f27e793]: Diagnosis
+                - textbox [ref=f27e794]
+              - generic [ref=f27e795]:
+                - generic [ref=f27e796]: Treatment Given
+                - textbox [ref=f27e797]
+              - generic [ref=f27e798]:
+                - generic [ref=f27e799]: Temperature (°C)
+                - textbox [ref=f27e800]
+              - generic [ref=f27e801]:
+                - generic [ref=f27e802]: Blood Pressure (mmHg)
+                - textbox [ref=f27e803]
+              - generic [ref=f27e804]:
+                - generic [ref=f27e805]: Pulse Rate (bpm)
+                - textbox [ref=f27e806]
+              - generic [ref=f27e807]:
+                - generic [ref=f27e808]: Assessment
+                - textbox [ref=f27e809]
+              - generic [ref=f27e810]:
+                - generic [ref=f27e811]: Medicine Dispensed
+                - textbox [ref=f27e812]
+              - generic [ref=f27e813]:
+                - generic [ref=f27e814]: Nurse on Duty
+                - textbox [ref=f27e815]
+              - generic [ref=f27e816]:
+                - generic [ref=f27e817]: Disposition
+                - combobox [ref=f27e818]:
+                  - option "Select Disposition" [selected]
+                  - option "Treated & Discharged"
+                  - option "Referred to Doctor"
+                  - option "Sent Home"
+                  - option "Emergency Referral"
+                  - option "Observation"
+            - generic [ref=f27e819]:
+              - button "Cancel" [ref=f27e820] [cursor=pointer]
+              - button "Log Visit" [ref=f27e821] [cursor=pointer]

@@ -1,0 +1,24 @@
+- generic [ref=f26e4]:
+  - generic [ref=f26e5]:
+    - generic [ref=f26e6]:
+      - heading "School Clinic Management System" [level=1] [ref=f26e10]
+      - paragraph [ref=f26e11]: Sign in to your account
+    - generic [ref=f26e12]:
+      - generic [ref=f26e13]:
+        - generic [ref=f26e14]: Username or Email
+        - textbox "Enter your username or email" [ref=f26e17]: admin
+      - generic [ref=f26e18]:
+        - generic [ref=f26e19]: Password
+        - generic [ref=f26e20]:
+          - textbox "Enter your password" [ref=f26e22]: admin123
+          - button
+      - generic [ref=f26e33]: "Database connection failed: SQLSTATE[HY000] [2054] The server requested authentication method unknown to the client [auth_gssapi_client]"
+      - generic [ref=f26e23]:
+        - generic [ref=f26e24]:
+          - checkbox "Remember me" [ref=f26e25]
+          - text: Remember me
+        - button "Forgot Password?" [ref=f26e26] [cursor=pointer]
+      - button "Log In" [ref=f26e27] [cursor=pointer]
+    - paragraph [ref=f26e28]: "Demo login — Username: admin · Password: admin123"
+    - paragraph [ref=f26e29]: © 2025 School Clinic Management System. All rights reserved.
+  - img "Modern clinic reception" [ref=f26e31]

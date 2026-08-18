@@ -7,6 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'Staff Encoder',
   status TEXT NOT NULL DEFAULT 'Active',
+  failed_login_count INT NOT NULL DEFAULT 0,
+  locked_until BIGINT NOT NULL DEFAULT 0,
+  last_login BIGINT NOT NULL DEFAULT 0,
+  two_factor_secret TEXT NOT NULL DEFAULT '',
+  two_factor_enabled INT NOT NULL DEFAULT 0,
+  linked_record_id TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -47,6 +53,20 @@ CREATE TABLE IF NOT EXISTS medicalrecords (
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS record_folders (
+  name VARCHAR(255) PRIMARY KEY,
+  meta TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+  id VARCHAR(48) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  is_self_service INTEGER NOT NULL DEFAULT 0,
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS medicalhistory (
   id VARCHAR(48) PRIMARY KEY,
   historyid TEXT NOT NULL DEFAULT '',
@@ -68,12 +88,20 @@ CREATE TABLE IF NOT EXISTS visits (
   id VARCHAR(48) PRIMARY KEY,
   patientname TEXT NOT NULL DEFAULT '',
   patienttype TEXT NOT NULL DEFAULT '',
+  studentid TEXT NOT NULL DEFAULT '',
+  staffid TEXT NOT NULL DEFAULT '',
   date TEXT NOT NULL DEFAULT '',
   time TEXT NOT NULL DEFAULT '',
   complaint TEXT NOT NULL DEFAULT '',
   diagnosis TEXT NOT NULL DEFAULT '',
   treatment TEXT NOT NULL DEFAULT '',
+  temperature TEXT NOT NULL DEFAULT '',
+  bloodpressure TEXT NOT NULL DEFAULT '',
+  pulserate TEXT NOT NULL DEFAULT '',
+  assessment TEXT NOT NULL DEFAULT '',
+  medicinedispensed TEXT NOT NULL DEFAULT '',
   nurseonduty TEXT NOT NULL DEFAULT '',
+  disposition TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -88,15 +116,39 @@ CREATE TABLE IF NOT EXISTS medicine (
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS dispensing (
+  id VARCHAR(48) PRIMARY KEY,
+  studentid TEXT NOT NULL DEFAULT '',
+  patientname TEXT NOT NULL DEFAULT '',
+  medicine_id TEXT NOT NULL DEFAULT '',
+  medicine_name TEXT NOT NULL DEFAULT '',
+  quantity INT NOT NULL DEFAULT 0,
+  date_released TEXT NOT NULL DEFAULT '',
+  released_by TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS appointments (
   id VARCHAR(48) PRIMARY KEY,
   patientname TEXT NOT NULL DEFAULT '',
   patienttype TEXT NOT NULL DEFAULT '',
+  studentid TEXT NOT NULL DEFAULT '',
+  staffid TEXT NOT NULL DEFAULT '',
+  doctor_id TEXT NOT NULL DEFAULT '',
   date TEXT NOT NULL DEFAULT '',
   time TEXT NOT NULL DEFAULT '',
   type TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'Pending',
   notes TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS doctor_schedule (
+  id VARCHAR(48) PRIMARY KEY,
+  doctor_id TEXT NOT NULL DEFAULT '',
+  date TEXT NOT NULL DEFAULT '',
+  available_time TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Available',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -113,6 +165,17 @@ CREATE TABLE IF NOT EXISTS incidents (
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS emergency_treatment (
+  id VARCHAR(48) PRIMARY KEY,
+  incident_id TEXT NOT NULL DEFAULT '',
+  treatment TEXT NOT NULL DEFAULT '',
+  medicine TEXT NOT NULL DEFAULT '',
+  nurse TEXT NOT NULL DEFAULT '',
+  date TEXT NOT NULL DEFAULT '',
+  remarks TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS staff (
   id VARCHAR(48) PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
@@ -122,6 +185,43 @@ CREATE TABLE IF NOT EXISTS staff (
   healthnotes TEXT NOT NULL DEFAULT '',
   lastcheckup TEXT NOT NULL DEFAULT '',
   contactnumber TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS employee_medical_record (
+  id VARCHAR(48) PRIMARY KEY,
+  staff_id TEXT NOT NULL DEFAULT '',
+  bloodtype TEXT NOT NULL DEFAULT '',
+  allergies TEXT NOT NULL DEFAULT '',
+  medicalconditions TEXT NOT NULL DEFAULT '',
+  immunizationstatus TEXT NOT NULL DEFAULT '',
+  lastphysicalexam TEXT NOT NULL DEFAULT '',
+  remarks TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS employee_visit (
+  id VARCHAR(48) PRIMARY KEY,
+  staff_id TEXT NOT NULL DEFAULT '',
+  staffname TEXT NOT NULL DEFAULT '',
+  date TEXT NOT NULL DEFAULT '',
+  time TEXT NOT NULL DEFAULT '',
+  complaint TEXT NOT NULL DEFAULT '',
+  diagnosis TEXT NOT NULL DEFAULT '',
+  treatment TEXT NOT NULL DEFAULT '',
+  nurseonduty TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS employee_medicine (
+  id VARCHAR(48) PRIMARY KEY,
+  staff_id TEXT NOT NULL DEFAULT '',
+  staffname TEXT NOT NULL DEFAULT '',
+  medicine_id TEXT NOT NULL DEFAULT '',
+  medicine_name TEXT NOT NULL DEFAULT '',
+  quantity INT NOT NULL DEFAULT 0,
+  date_released TEXT NOT NULL DEFAULT '',
+  released_by TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -137,15 +237,47 @@ CREATE TABLE IF NOT EXISTS programs (
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS participants (
+  id VARCHAR(48) PRIMARY KEY,
+  program_id TEXT NOT NULL DEFAULT '',
+  studentid TEXT NOT NULL DEFAULT '',
+  studentname TEXT NOT NULL DEFAULT '',
+  eligibility TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Registered',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS attendance (
+  id VARCHAR(48) PRIMARY KEY,
+  program_id TEXT NOT NULL DEFAULT '',
+  participant_id TEXT NOT NULL DEFAULT '',
+  attendance_date TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Present',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS assessment (
+  id VARCHAR(48) PRIMARY KEY,
+  program_id TEXT NOT NULL DEFAULT '',
+  participant_id TEXT NOT NULL DEFAULT '',
+  result TEXT NOT NULL DEFAULT '',
+  remarks TEXT NOT NULL DEFAULT '',
+  assessed_by TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS clearance (
   id VARCHAR(48) PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
   persontype TEXT NOT NULL DEFAULT '',
+  studentid TEXT NOT NULL DEFAULT '',
+  staffid TEXT NOT NULL DEFAULT '',
   clearancetype TEXT NOT NULL DEFAULT '',
   dateissued TEXT NOT NULL DEFAULT '',
   expirydate TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'Pending',
   issuedby TEXT NOT NULL DEFAULT '',
+  qrcode TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -158,6 +290,33 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   resource_id TEXT NOT NULL DEFAULT '',
   details TEXT NOT NULL DEFAULT '',
   ip_address TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS privacy_consents (
+  id VARCHAR(48) PRIMARY KEY,
+  subject_id TEXT NOT NULL DEFAULT '',
+  subject_name TEXT NOT NULL DEFAULT '',
+  subject_type TEXT NOT NULL DEFAULT '',
+  consent_type TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Granted',
+  granted_at TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS permissions (
+  id VARCHAR(48) PRIMARY KEY,
+  module TEXT NOT NULL DEFAULT '',
+  action TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+  id VARCHAR(48) PRIMARY KEY,
+  role TEXT NOT NULL DEFAULT '',
+  permission_id TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 

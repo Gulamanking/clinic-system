@@ -1,0 +1,99 @@
+- generic [ref=f27e2]:
+  - complementary [ref=f27e446]:
+    - generic [ref=f27e452]:
+      - paragraph [ref=f27e453]: School Clinic
+      - paragraph [ref=f27e454]: Management System
+    - navigation [ref=f27e455]:
+      - generic [ref=f27e456]:
+        - paragraph [ref=f27e457]: Overview
+        - button "Dashboard" [ref=f27e458] [cursor=pointer]
+      - generic [ref=f27e465]:
+        - paragraph [ref=f27e466]: Patient Services
+        - button "Student Medical Records" [ref=f27e467] [cursor=pointer]
+        - button "Medical Records" [ref=f27e472] [cursor=pointer]
+        - button "Medical History" [ref=f27e477] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f27e482] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f27e487] [cursor=pointer]
+      - generic [ref=f27e492]:
+        - paragraph [ref=f27e493]: Clinical Management
+        - button "Medicine Inventory" [ref=f27e494] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f27e499] [cursor=pointer]
+      - generic [ref=f27e503]:
+        - paragraph [ref=f27e504]: Health Services
+        - button "Faculty & Staff Health" [ref=f27e505] [cursor=pointer]
+        - button "Health Programs" [ref=f27e512] [cursor=pointer]
+        - button "Health Clearance" [ref=f27e516] [cursor=pointer]
+      - generic [ref=f27e521]:
+        - paragraph [ref=f27e522]: Administration
+        - button "Reporting & Compliance" [ref=f27e523] [cursor=pointer]
+        - button "User Access Control" [ref=f27e528] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f27e532] [cursor=pointer]
+    - generic [ref=f27e539]:
+      - generic [ref=f27e540]: "N"
+      - generic [ref=f27e541]:
+        - paragraph [ref=f27e542]: Nurse Admin
+        - paragraph [ref=f27e543]: Clinic Administrator
+      - button "Logout" [ref=f27e544] [cursor=pointer]
+    - button [ref=f27e548] [cursor=pointer]
+  - generic [ref=f27e551]:
+    - banner [ref=f27e552]:
+      - generic [ref=f27e554]:
+        - generic [ref=f27e555]: School Clinic
+        - generic [ref=f27e558]: Clinic Visit & Consultation Logging
+      - generic [ref=f27e559]:
+        - generic [ref=f27e560]:
+          - paragraph [ref=f27e561]: 01:12 PM
+          - paragraph [ref=f27e562]: Tue, Aug 18, 2026
+        - button [ref=f27e564] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f27e569] [cursor=pointer]:
+          - generic [ref=f27e570]: "N"
+          - generic [ref=f27e571]: Nurse Admin
+    - main [ref=f27e572]:
+      - generic [ref=f27e573]:
+        - generic [ref=f27e574]:
+          - generic [ref=f27e581]:
+            - heading "Clinic Visit & Consultation Log" [level=2] [ref=f27e582]
+            - paragraph [ref=f27e583]: 0 visits on file
+          - generic [ref=f27e584]:
+            - button "Export" [ref=f27e585] [cursor=pointer]
+            - button "Import" [ref=f27e589] [cursor=pointer]
+            - link "Template" [ref=f27e593] [cursor=pointer]:
+              - /url: visits_import_template.csv
+            - button "Log Visit" [ref=f27e597] [cursor=pointer]
+        - generic [ref=f27e599]:
+          - textbox "Search patient, ID, complaint..." [ref=f27e604]
+          - textbox [ref=f27e605]
+          - combobox [ref=f27e606]:
+            - option "All" [selected]
+            - option "Student"
+            - option "Faculty/Staff"
+          - combobox [ref=f27e607]:
+            - option "All" [selected]
+            - option "Treated & Discharged"
+            - option "Referred to Doctor"
+            - option "Sent Home"
+            - option "Emergency Referral"
+            - option "Observation"
+          - button "Generate" [ref=f27e608] [cursor=pointer]
+          - generic [ref=f27e612]: 0 visits
+        - table [ref=f27e615]:
+          - rowgroup [ref=f27e616]:
+            - row [ref=f27e617]:
+              - columnheader "Visit ID" [ref=f27e618]
+              - columnheader "Patient" [ref=f27e619]
+              - columnheader "Type" [ref=f27e620]
+              - columnheader "Date & Time" [ref=f27e621]
+              - columnheader "Chief Complaint" [ref=f27e622]
+              - columnheader "Vital Signs" [ref=f27e623]
+              - columnheader "Diagnosis" [ref=f27e624]
+              - columnheader "Treatment" [ref=f27e625]
+              - columnheader "Disposition" [ref=f27e626]
+              - columnheader "Actions" [ref=f27e627]
+          - rowgroup [ref=f27e628]:
+            - row [ref=f27e629]:
+              - cell "No visits found. Click \"Log Visit\" to create one." [ref=f27e630]
+        - generic [ref=f27e631]:
+          - paragraph [ref=f27e632]: Showing 0 of 0
+          - generic [ref=f27e633]:
+            - button [disabled] [ref=f27e634]
+            - button [disabled] [ref=f27e637]

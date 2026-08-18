@@ -1,0 +1,183 @@
+- generic [ref=f30e2]:
+  - complementary [ref=f30e744]:
+    - generic [ref=f30e750]:
+      - paragraph [ref=f30e751]: School Clinic
+      - paragraph [ref=f30e752]: Management System
+    - navigation [ref=f30e753]:
+      - generic [ref=f30e754]:
+        - paragraph [ref=f30e755]: Overview
+        - button "Dashboard" [ref=f30e756] [cursor=pointer]
+      - generic [ref=f30e763]:
+        - paragraph [ref=f30e764]: Patient Services
+        - button "Student Medical Records" [ref=f30e765] [cursor=pointer]
+        - button "Medical Records" [ref=f30e770] [cursor=pointer]
+        - button "Medical History" [ref=f30e775] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f30e780] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f30e785] [cursor=pointer]
+      - generic [ref=f30e790]:
+        - paragraph [ref=f30e791]: Clinical Management
+        - button "Medicine Inventory" [ref=f30e792] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f30e797] [cursor=pointer]
+      - generic [ref=f30e801]:
+        - paragraph [ref=f30e802]: Health Services
+        - button "Faculty & Staff Health" [ref=f30e803] [cursor=pointer]
+        - button "Health Programs" [ref=f30e810] [cursor=pointer]
+        - button "Health Clearance" [ref=f30e814] [cursor=pointer]
+      - generic [ref=f30e819]:
+        - paragraph [ref=f30e820]: Administration
+        - button "Reporting & Compliance" [ref=f30e821] [cursor=pointer]
+        - button "User Access Control" [ref=f30e826] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f30e830] [cursor=pointer]
+    - generic [ref=f30e837]:
+      - generic [ref=f30e838]: "N"
+      - generic [ref=f30e839]:
+        - paragraph [ref=f30e840]: Nurse Admin
+        - paragraph [ref=f30e841]: Clinic Administrator
+      - button "Logout" [ref=f30e842] [cursor=pointer]
+    - button [ref=f30e846] [cursor=pointer]
+  - generic [ref=f30e849]:
+    - banner [ref=f30e850]:
+      - generic [ref=f30e852]:
+        - generic [ref=f30e853]: School Clinic
+        - generic [ref=f30e856]: Clinic Visit & Consultation Logging
+      - generic [ref=f30e857]:
+        - generic [ref=f30e858]:
+          - paragraph [ref=f30e859]: 02:04 PM
+          - paragraph [ref=f30e860]: Tue, Aug 18, 2026
+        - button [ref=f30e862] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f30e867] [cursor=pointer]:
+          - generic [ref=f30e868]: "N"
+          - generic [ref=f30e869]: Nurse Admin
+    - generic [ref=f30e870]: Created Clinic Visit & Consultation Logging successfully.
+    - main [ref=f30e871]:
+      - generic [ref=f30e872]:
+        - generic [ref=f30e873]:
+          - generic [ref=f30e880]:
+            - heading "Clinic Visit & Consultation Log" [level=2] [ref=f30e881]
+            - paragraph [ref=f30e882]: 4 visits on file
+          - generic [ref=f30e883]:
+            - button "Export" [ref=f30e884] [cursor=pointer]
+            - button "Import" [ref=f30e888] [cursor=pointer]
+            - link "Template" [ref=f30e892] [cursor=pointer]:
+              - /url: visits_import_template.csv
+            - button "Log Visit" [ref=f30e896] [cursor=pointer]
+        - generic [ref=f30e898]:
+          - textbox "Search patient, ID, complaint..." [ref=f30e903]
+          - textbox [ref=f30e904]
+          - combobox [ref=f30e905]:
+            - option "All" [selected]
+            - option "Student"
+            - option "Faculty/Staff"
+          - combobox [ref=f30e906]:
+            - option "All" [selected]
+            - option "Treated & Discharged"
+            - option "Referred to Doctor"
+            - option "Sent Home"
+            - option "Emergency Referral"
+            - option "Observation"
+          - button "Generate" [ref=f30e907] [cursor=pointer]
+          - generic [ref=f30e911]: 4 visits
+        - table [ref=f30e914]:
+          - rowgroup [ref=f30e915]:
+            - row [ref=f30e916]:
+              - columnheader "Visit ID" [ref=f30e917]
+              - columnheader "Patient" [ref=f30e918]
+              - columnheader "Type" [ref=f30e919]
+              - columnheader "Date & Time" [ref=f30e920]
+              - columnheader "Chief Complaint" [ref=f30e921]
+              - columnheader "Vital Signs" [ref=f30e922]
+              - columnheader "Diagnosis" [ref=f30e923]
+              - columnheader "Treatment" [ref=f30e924]
+              - columnheader "Disposition" [ref=f30e925]
+              - columnheader "Actions" [ref=f30e926]
+          - rowgroup [ref=f30e927]:
+            - row [ref=f30e928]:
+              - cell "CV-2026-02" [ref=f30e929]
+              - cell [ref=f30e930]:
+                - paragraph [ref=f30e931]: AI Button Test
+              - cell [ref=f30e932]
+              - cell [ref=f30e933]:
+                - paragraph [ref=f30e934]: 2026-08-18
+                - paragraph [ref=f30e935]: 14:04
+              - cell [ref=f30e936]:
+                - paragraph [ref=f30e937]: fever
+              - cell "—" [ref=f30e938]
+              - cell [ref=f30e939]:
+                - paragraph [ref=f30e940]: viral fever
+              - cell [ref=f30e941]:
+                - paragraph
+              - cell "—" [ref=f30e942]
+              - cell [ref=f30e943]:
+                - generic [ref=f30e944]:
+                  - button "View" [ref=f30e945] [cursor=pointer]
+                  - button "Edit" [ref=f30e949] [cursor=pointer]
+                  - button "Delete" [ref=f30e953] [cursor=pointer]
+            - row [ref=f30e957]:
+              - cell "42478ebfce44f7e327082e09" [ref=f30e958]
+              - cell [ref=f30e959]:
+                - paragraph [ref=f30e960]: Maria Santos
+              - cell "Faculty/Staff" [ref=f30e961]
+              - cell [ref=f30e962]:
+                - paragraph [ref=f30e963]: 2024-01-15
+                - paragraph [ref=f30e964]: 10:15
+              - cell [ref=f30e965]:
+                - paragraph [ref=f30e966]: Lower back pain
+              - cell "🌡️ 36.8°C ❤️ 130/85 💓 78 bpm" [ref=f30e967]: 🌡️ 36.8°C❤️ 130/85💓 78 bpm
+              - cell [ref=f30e968]:
+                - paragraph [ref=f30e969]: Muscle strain
+              - cell [ref=f30e970]:
+                - paragraph [ref=f30e971]: Hot compress, pain reliever
+              - cell "Treated & Discharged" [ref=f30e972]
+              - cell [ref=f30e973]:
+                - generic [ref=f30e974]:
+                  - button "View" [ref=f30e975] [cursor=pointer]
+                  - button "Edit" [ref=f30e979] [cursor=pointer]
+                  - button "Delete" [ref=f30e983] [cursor=pointer]
+            - row [ref=f30e987]:
+              - cell "60a2cf9f98c12f3da19460d6" [ref=f30e988]
+              - cell [ref=f30e989]:
+                - paragraph [ref=f30e990]: Juan Dela Cruz
+              - cell "Student" [ref=f30e991]
+              - cell [ref=f30e992]:
+                - paragraph [ref=f30e993]: 2024-01-15
+                - paragraph [ref=f30e994]: 09:30
+              - cell [ref=f30e995]:
+                - paragraph [ref=f30e996]: Headache and dizziness
+              - cell "🌡️ 36.5°C ❤️ 120/80 💓 72 bpm" [ref=f30e997]: 🌡️ 36.5°C❤️ 120/80💓 72 bpm
+              - cell [ref=f30e998]:
+                - paragraph [ref=f30e999]: Mild dehydration
+              - cell [ref=f30e1000]:
+                - paragraph [ref=f30e1001]: Oral rehydration, rest
+              - cell "Treated & Discharged" [ref=f30e1002]
+              - cell [ref=f30e1003]:
+                - generic [ref=f30e1004]:
+                  - button "View" [ref=f30e1005] [cursor=pointer]
+                  - button "Edit" [ref=f30e1009] [cursor=pointer]
+                  - button "Delete" [ref=f30e1013] [cursor=pointer]
+            - row [ref=f30e1017]:
+              - cell "CV-2026-01" [ref=f30e1018]
+              - cell [ref=f30e1019]:
+                - paragraph [ref=f30e1020]: AI Test Patient
+              - cell [ref=f30e1021]
+              - cell [ref=f30e1022]:
+                - paragraph [ref=f30e1023]: 2026-08-18
+                - paragraph [ref=f30e1024]: 13:12
+              - cell [ref=f30e1025]:
+                - paragraph [ref=f30e1026]: headache
+              - cell "—" [ref=f30e1027]
+              - cell [ref=f30e1028]:
+                - paragraph [ref=f30e1029]: tension headache
+              - cell [ref=f30e1030]:
+                - paragraph
+              - cell "—" [ref=f30e1031]
+              - cell [ref=f30e1032]:
+                - generic [ref=f30e1033]:
+                  - button "View" [ref=f30e1034] [cursor=pointer]
+                  - button "Edit" [ref=f30e1038] [cursor=pointer]
+                  - button "Delete" [ref=f30e1042] [cursor=pointer]
+        - generic [ref=f30e1046]:
+          - paragraph [ref=f30e1047]: Showing 1–4 of 4
+          - generic [ref=f30e1048]:
+            - button [disabled] [ref=f30e1049]
+            - button "1" [ref=f30e1052] [cursor=pointer]
+            - button [disabled] [ref=f30e1053]
