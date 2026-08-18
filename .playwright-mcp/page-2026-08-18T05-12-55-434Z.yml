@@ -1,0 +1,159 @@
+- generic [ref=f27e2]:
+  - complementary [ref=f27e1045]:
+    - generic [ref=f27e1051]:
+      - paragraph [ref=f27e1052]: School Clinic
+      - paragraph [ref=f27e1053]: Management System
+    - navigation [ref=f27e1054]:
+      - generic [ref=f27e1055]:
+        - paragraph [ref=f27e1056]: Overview
+        - button "Dashboard" [ref=f27e1057] [cursor=pointer]
+      - generic [ref=f27e1064]:
+        - paragraph [ref=f27e1065]: Patient Services
+        - button "Student Medical Records" [ref=f27e1066] [cursor=pointer]
+        - button "Medical Records" [ref=f27e1071] [cursor=pointer]
+        - button "Medical History" [ref=f27e1076] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f27e1081] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f27e1086] [cursor=pointer]
+      - generic [ref=f27e1091]:
+        - paragraph [ref=f27e1092]: Clinical Management
+        - button "Medicine Inventory" [ref=f27e1093] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f27e1098] [cursor=pointer]
+      - generic [ref=f27e1102]:
+        - paragraph [ref=f27e1103]: Health Services
+        - button "Faculty & Staff Health" [ref=f27e1104] [cursor=pointer]
+        - button "Health Programs" [ref=f27e1111] [cursor=pointer]
+        - button "Health Clearance" [ref=f27e1115] [cursor=pointer]
+      - generic [ref=f27e1120]:
+        - paragraph [ref=f27e1121]: Administration
+        - button "Reporting & Compliance" [ref=f27e1122] [cursor=pointer]
+        - button "User Access Control" [ref=f27e1127] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f27e1131] [cursor=pointer]
+    - generic [ref=f27e1138]:
+      - generic [ref=f27e1139]: "N"
+      - generic [ref=f27e1140]:
+        - paragraph [ref=f27e1141]: Nurse Admin
+        - paragraph [ref=f27e1142]: Clinic Administrator
+      - button "Logout" [ref=f27e1143] [cursor=pointer]
+    - button [ref=f27e1147] [cursor=pointer]
+  - generic [ref=f27e1150]:
+    - banner [ref=f27e1151]:
+      - generic [ref=f27e1153]:
+        - generic [ref=f27e1154]: School Clinic
+        - generic [ref=f27e1157]: Clinic Visit & Consultation Logging
+      - generic [ref=f27e1158]:
+        - generic [ref=f27e1159]:
+          - paragraph [ref=f27e1160]: 01:12 PM
+          - paragraph [ref=f27e1161]: Tue, Aug 18, 2026
+        - button [ref=f27e1163] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f27e1168] [cursor=pointer]:
+          - generic [ref=f27e1169]: "N"
+          - generic [ref=f27e1170]: Nurse Admin
+    - main [ref=f27e1171]:
+      - generic [ref=f27e1320]:
+        - generic [ref=f27e1321]:
+          - generic [ref=f27e1328]:
+            - heading "Clinic Visit & Consultation Log" [level=2] [ref=f27e1329]
+            - paragraph [ref=f27e1330]: 1 visit on file
+          - generic [ref=f27e1331]:
+            - button "Export" [ref=f27e1332] [cursor=pointer]
+            - button "Import" [ref=f27e1336] [cursor=pointer]
+            - link "Template" [ref=f27e1340] [cursor=pointer]:
+              - /url: visits_import_template.csv
+            - button "Log Visit" [ref=f27e1344] [cursor=pointer]
+        - generic [ref=f27e1346]:
+          - textbox "Search patient, ID, complaint..." [ref=f27e1351]
+          - textbox [ref=f27e1352]
+          - combobox [ref=f27e1353]:
+            - option "All" [selected]
+            - option "Student"
+            - option "Faculty/Staff"
+          - combobox [ref=f27e1354]:
+            - option "All" [selected]
+            - option "Treated & Discharged"
+            - option "Referred to Doctor"
+            - option "Sent Home"
+            - option "Emergency Referral"
+            - option "Observation"
+          - button "Generate" [ref=f27e1355] [cursor=pointer]
+          - generic [ref=f27e1359]: 1 visit
+        - table [ref=f27e1362]:
+          - rowgroup [ref=f27e1363]:
+            - row [ref=f27e1364]:
+              - columnheader "Visit ID" [ref=f27e1365]
+              - columnheader "Patient" [ref=f27e1366]
+              - columnheader "Type" [ref=f27e1367]
+              - columnheader "Date & Time" [ref=f27e1368]
+              - columnheader "Chief Complaint" [ref=f27e1369]
+              - columnheader "Vital Signs" [ref=f27e1370]
+              - columnheader "Diagnosis" [ref=f27e1371]
+              - columnheader "Treatment" [ref=f27e1372]
+              - columnheader "Disposition" [ref=f27e1373]
+              - columnheader "Actions" [ref=f27e1374]
+          - rowgroup [ref=f27e1375]:
+            - row [ref=f27e1376]:
+              - cell "CV-2026-01" [ref=f27e1377]
+              - cell [ref=f27e1378]:
+                - paragraph [ref=f27e1379]: AI Test Patient
+              - cell [ref=f27e1380]
+              - cell [ref=f27e1381]:
+                - paragraph [ref=f27e1382]: 2026-08-18
+                - paragraph [ref=f27e1383]: 13:12
+              - cell [ref=f27e1384]:
+                - paragraph [ref=f27e1385]: headache
+              - cell "—" [ref=f27e1386]
+              - cell [ref=f27e1387]:
+                - paragraph [ref=f27e1388]: tension headache
+              - cell [ref=f27e1389]:
+                - paragraph
+              - cell "—" [ref=f27e1390]
+              - cell [ref=f27e1391]:
+                - generic [ref=f27e1392]:
+                  - button "View" [ref=f27e1393] [cursor=pointer]
+                  - button "Edit" [ref=f27e1397] [cursor=pointer]
+                  - button "Delete" [ref=f27e1401] [cursor=pointer]
+        - generic [ref=f27e1405]:
+          - paragraph [ref=f27e1406]: Showing 1–1 of 1
+          - generic [ref=f27e1407]:
+            - button [disabled] [ref=f27e1408]
+            - button "1" [ref=f27e1411] [cursor=pointer]
+            - button [disabled] [ref=f27e1412]
+        - generic [ref=f27e1416]:
+          - generic [ref=f27e1417]:
+            - heading "Visit Details" [level=3] [ref=f27e1418]
+            - button [ref=f27e1419] [cursor=pointer]
+          - generic [ref=f27e1423]:
+            - generic [ref=f27e1424]:
+              - generic [ref=f27e1425]:
+                - paragraph [ref=f27e1426]: AI Test Patient
+                - paragraph [ref=f27e1427]: CV-2026-01 · 2026-08-18 13:12
+              - generic [ref=f27e1428]: —
+            - generic [ref=f27e1429]:
+              - generic [ref=f27e1430]:
+                - paragraph [ref=f27e1431]: Patient Type
+                - paragraph [ref=f27e1432]: —
+              - generic [ref=f27e1433]:
+                - paragraph [ref=f27e1434]: Chief Complaint
+                - paragraph [ref=f27e1435]: headache
+              - generic [ref=f27e1436]:
+                - paragraph [ref=f27e1437]: Vital Signs
+                - paragraph [ref=f27e1438]: "Temp: — | BP: — | PR: — bpm"
+              - generic [ref=f27e1439]:
+                - paragraph [ref=f27e1440]: Assessment / Diagnosis
+                - paragraph [ref=f27e1441]: tension headache
+              - generic [ref=f27e1442]:
+                - paragraph [ref=f27e1443]: Treatment Given
+                - paragraph [ref=f27e1444]: —
+              - generic [ref=f27e1445]:
+                - paragraph [ref=f27e1446]: Medicine Dispensed
+                - paragraph [ref=f27e1447]: None
+              - generic [ref=f27e1448]:
+                - paragraph [ref=f27e1449]: Attending Nurse
+                - paragraph [ref=f27e1450]: —
+            - generic [ref=f27e1451]:
+              - paragraph [ref=f27e1452]: Dispense Medicine
+              - generic [ref=f27e1453]:
+                - combobox [ref=f27e1454]:
+                  - option "Select medicine…" [selected]
+                - spinbutton "Quantity" [ref=f27e1455]
+                - button "Dispense" [ref=f27e1456] [cursor=pointer]
+            - button "Close" [ref=f27e1457] [cursor=pointer]

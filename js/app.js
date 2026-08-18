@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { key: 'clearance', label: 'Health Clearance and Certification' },
   { key: 'reports', label: 'Reporting and Compliance' },
   { key: 'users', label: 'User Access & Confidentiality' },
+  { key: 'privacyConsents', label: 'Privacy Consent Tracking' },
 ];
 
 const ICON_MAP = {
@@ -71,9 +72,26 @@ function modulePermission(key) {
   return 'access_patient_records';
 }
 
+// Mirrors the backend's actual GET-time enforcement (index.php's routing
+// dispatch): ADMIN_ONLY_RESOURCES gate both read and write behind
+// manage_users; every other module is readable by any authenticated clinical
+// role; Student/Faculty and Staff self-service accounts only get
+// 'appointments' per getDefaultRolePermissions() in auth.php. Was previously
+// stubbed to unconditionally return true (leftover debug code) — every role
+// saw every nav item, including ones the backend would 403 on, producing a
+// misleading "0 records" empty page instead of the item never appearing.
 function canAccessView(key) {
-  // Always return true for debugging
-  console.log('canAccessView called for:', key, 'currentUser:', state.currentUser);
+  var role = state.currentUser ? (state.currentUser.role || '') : '';
+  if (!role) return false;
+  if (['users', 'rolePermissions'].indexOf(key) !== -1) {
+    return role === 'Clinic Administrator';
+  }
+  if (key === 'reports') {
+    return ['Clinic Administrator', 'School Nurse', 'Physician', 'Staff Encoder'].indexOf(role) !== -1;
+  }
+  if (['Student', 'Faculty and Staff'].indexOf(role) !== -1) {
+    return key === 'appointments' || key === 'dashboard';
+  }
   return true;
 }
 
@@ -92,6 +110,8 @@ const STUDENT_FIELDS = [
 const VISIT_FIELDS = [
   { name: 'patientName', label: 'Patient Name', type: 'text', required: true },
   { name: 'patientType', label: 'Patient Type', type: 'select', options: ['Student', 'Faculty/Staff'] },
+  { name: 'studentId', label: 'Student ID', type: 'hidden' },
+  { name: 'staffId', label: 'Staff ID', type: 'hidden' },
   { name: 'date', label: 'Date', type: 'date', required: true },
   { name: 'time', label: 'Time', type: 'time' },
   { name: 'complaint', label: 'Chief Complaint', type: 'text' },
@@ -135,6 +155,8 @@ const MEDICAL_RECORD_FIELDS = [
 const APPOINTMENT_FIELDS = [
   { name: 'patientName', label: 'Patient Name', type: 'text', required: true },
   { name: 'patientType', label: 'Patient Type', type: 'select', options: ['Student', 'Faculty/Staff'] },
+  { name: 'studentId', label: 'Student ID', type: 'hidden' },
+  { name: 'staffId', label: 'Staff ID', type: 'hidden' },
   { name: 'date', label: 'Date', type: 'date', required: true },
   { name: 'time', label: 'Time', type: 'time' },
   { name: 'type', label: 'Appointment Type', type: 'select', options: ['General Check-up', 'Follow-up Consultation', 'Vaccination', 'Dental Check-up', 'Physical Exam', 'Other'] },
@@ -172,6 +194,8 @@ const PROGRAM_FIELDS = [
 const CLEARANCE_FIELDS = [
   { name: 'name', label: 'Full Name', type: 'text', required: true },
   { name: 'personType', label: 'Person Type', type: 'select', options: ['Student', 'Faculty/Staff'] },
+  { name: 'studentId', label: 'Student ID', type: 'hidden' },
+  { name: 'staffId', label: 'Staff ID', type: 'hidden' },
   { name: 'clearanceType', label: 'Clearance Type', type: 'select', options: ['Medical Clearance', 'Fitness to Return', 'Sports Clearance', 'Health Certificate', 'Other'] },
   { name: 'dateIssued', label: 'Date Issued', type: 'date' },
   { name: 'expiryDate', label: 'Expiry Date', type: 'date' },
@@ -192,12 +216,23 @@ const MEDICAL_HISTORY_FIELDS = [
   { name: 'doctor', label: 'Doctor', type: 'text' },
   { name: 'visitDate', label: 'Visit Date', type: 'date' },
 ];
+const PRIVACY_CONSENT_FIELDS = [
+  { name: 'subjectName', label: 'Subject Name', type: 'text', required: true },
+  { name: 'subjectId', label: 'Subject ID', type: 'text' },
+  { name: 'subjectType', label: 'Subject Type', type: 'select', options: ['Student', 'Faculty/Staff'] },
+  { name: 'consentType', label: 'Consent Type', type: 'select', options: ['Data Processing', 'Photo/Media Release', 'Treatment Consent', 'Information Sharing with Guardian', 'Other'] },
+  { name: 'status', label: 'Status', type: 'select', options: ['Granted', 'Revoked', 'Pending'] },
+  { name: 'grantedAt', label: 'Date Granted', type: 'date' },
+  { name: 'notes', label: 'Notes', type: 'textarea' },
+];
+
 const USER_FIELDS = [
   { name: 'fullName', label: 'Full Name', type: 'text', required: true },
   { name: 'username', label: 'Username', type: 'text', required: true },
   { name: 'password', label: 'Password', type: 'password', required: true, hideInTable: true },
-  { name: 'role', label: 'Role', type: 'select', options: ['Clinic Administrator', 'School Nurse', 'Physician', 'Staff Encoder'] },
+  { name: 'role', label: 'Role', type: 'select', options: ['Clinic Administrator', 'School Nurse', 'Physician', 'Staff Encoder', 'Student', 'Faculty and Staff'] },
   { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
+  { name: 'linkedRecordId', label: 'Linked Student/Staff Record ID', type: 'text', hideInTable: true },
 ];
 
 const MODULES = {
@@ -211,6 +246,7 @@ const MODULES = {
   programs: { title: 'School Health Program Monitoring', color: 'indigo', storageKey: 'programs', fields: PROGRAM_FIELDS, searchKeys: ['name', 'category'], primary: 'name' },
   clearance: { title: 'Health Clearance and Certification', color: 'teal', storageKey: 'clearance', fields: CLEARANCE_FIELDS, searchKeys: ['name', 'clearanceType'], primary: 'name' },
   users: { title: 'User Access & Confidentiality', color: 'slate', storageKey: 'users', fields: USER_FIELDS, searchKeys: ['fullName', 'username', 'role'], primary: 'fullName' },
+  privacyConsents: { title: 'Privacy Consent Tracking', color: 'slate', storageKey: 'privacyConsents', fields: PRIVACY_CONSENT_FIELDS, searchKeys: ['subjectName', 'consentType'], primary: 'subjectName' },
   medicine: { title: 'Medicine Inventory & Dispensing', color: 'orange', storageKey: 'medicine', fields: MEDICINE_FIELDS, searchKeys: ['name', 'category'], primary: 'name' },
 };
 
@@ -330,7 +366,9 @@ function renderFieldInput(field, value, namePrefix, readonly) {
   var baseClass = 'w-full rounded-lg border border-[#E8D4DB] px-3 py-2 text-sm text-[#2B2B2B] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30';
   var html = '';
   
-  if (field.type === 'select') {
+  if (field.type === 'hidden') {
+    return '<input type="hidden" id="' + id + '" name="' + id + '" value="' + esc(val) + '" />';
+  } else if (field.type === 'select') {
     html += '<select id="' + id + '" name="' + id + '" class="' + baseClass + '">';
     html += '<option value="">Select ' + esc(field.label) + '</option>';
     (field.options || []).forEach(function(o) {
@@ -345,6 +383,55 @@ function renderFieldInput(field, value, namePrefix, readonly) {
     html += '<input type="' + esc(field.type) + '" id="' + id + '" name="' + id + '" value="' + esc(val) + '" class="' + baseClass + '"' + (readonly ? ' readonly' : '') + ' />';
   }
   return html;
+}
+
+// Shared by renderVisitsModule, renderAppointmentsModule, and renderCrudModule
+// (clearance) — lets whoever's creating a visit/appointment/clearance for a
+// Student or Faculty/Staff link it precisely to a real students/staff row,
+// instead of leaving the match up to autoLinkPatientRecord()'s best-effort
+// unique-name lookup on the backend. Closes the ambiguity gap for anyone
+// already enrolled/registered; a genuine walk-in not yet in the system still
+// falls back to the name-based match, which is the correct behavior for that
+// case (there's nothing to link to yet).
+function lazyLoadPatientLinkLists(ms) {
+  if (typeof ms.allStudents !== 'undefined') return;
+  ms.allStudents = null;
+  ms.allStaffMembers = null;
+  Promise.all([API.list('students'), API.list('staff')]).then(function(results) {
+    ms.allStudents = results[0] || [];
+    ms.allStaffMembers = results[1] || [];
+    renderMainContent();
+  }).catch(function() { ms.allStudents = []; ms.allStaffMembers = []; });
+}
+
+function renderPatientLinkSelector(key, ms) {
+  var needsPatientLink = ['visits', 'appointments', 'clearance'].indexOf(key) !== -1;
+  var isSelfServiceUser = state.currentUser && ['Student', 'Faculty and Staff'].indexOf(state.currentUser.role) !== -1;
+  if (!needsPatientLink || ms.editing || isSelfServiceUser) return '';
+
+  var nameKey = key === 'clearance' ? 'name' : 'patientName';
+  var loadingLink = ms.allStudents === null || typeof ms.allStudents === 'undefined';
+  if (loadingLink) {
+    return '<div class="mb-4 rounded-lg border p-3" style="border-color:#E8D4DB;background:#FDF6F8">' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Link to Existing Record</label>' +
+      '<p class="text-xs" style="color:#7A7A7A">Loading students/staff…</p></div>';
+  }
+
+  var options = '<option value="">— Not yet in the system (walk-in) —</option>' +
+    (ms.allStudents || []).map(function(s) {
+      var sel = ms.form.studentId === s.id ? ' selected' : '';
+      return '<option value="student:' + esc(s.id) + '" data-name="' + esc(s.name) + '"' + sel + '>' + esc(s.name) + ' (' + esc(s.studentId || '') + ') — Student</option>';
+    }).join('') +
+    (ms.allStaffMembers || []).map(function(s) {
+      var sel = ms.form.staffId === s.id ? ' selected' : '';
+      return '<option value="staff:' + esc(s.id) + '" data-name="' + esc(s.name) + '"' + sel + '>' + esc(s.name) + ' — Faculty/Staff</option>';
+    }).join('');
+
+  return '<div class="mb-4 rounded-lg border p-3" style="border-color:#E8D4DB;background:#FDF6F8">' +
+    '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Link to Existing Record</label>' +
+    '<select data-patient-select="' + key + '" class="w-full rounded-lg border border-[#E8D4DB] px-3 py-2 text-sm">' + options + '</select>' +
+    '<p class="mt-1 text-[10px]" style="color:#7A7A7A">Selecting a record fills in the ' + esc(nameKey) + ' fields below and links this entry precisely — avoids mismatches when two people share a name. Leave unselected only for someone not yet enrolled/registered.</p>' +
+    '</div>';
 }
 
 /* ============================== MODAL ============================== */
@@ -503,6 +590,55 @@ function renderLoginScreen() {
     '</div>';
 }
 
+function renderTwoFactorScreen() {
+  return '<div class="flex w-full min-h-screen items-center justify-center p-4" style="background:#F8F7FA">' +
+    '<div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">' +
+    '<div class="mb-6 flex flex-col items-center text-center">' +
+    '<div class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background:#F0ECF2">' + icon('shield-check', 26, 'text-[#7B1028]') + '</div>' +
+    '<h1 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Two-Factor Verification</h1>' +
+    '<p class="mt-2 text-sm" style="color:#5A4A62">Enter the 6-digit code from your authenticator app</p>' +
+    '</div>' +
+    '<form id="twofactor-form" class="space-y-4">' +
+    '<input id="twofactor-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="w-full rounded-lg border border-[#E8D4DB] py-2.5 px-3 text-center text-lg tracking-[0.5em] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30" placeholder="000000" />' +
+    '<div id="twofactor-error" class="hidden rounded-lg px-3 py-2 text-xs" style="background:#FDF6F8;color:#C13030"></div>' +
+    '<button type="submit" id="twofactor-submit" class="w-full rounded-lg py-2.5 text-sm font-medium text-white disabled:opacity-60" style="background:#7B1028">Verify</button>' +
+    '<button type="button" id="twofactor-cancel" class="w-full rounded-lg py-2 text-xs" style="color:#5A4A62">Back to login</button>' +
+    '</form>' +
+    '</div></div>';
+}
+
+async function handleTwoFactorSubmit() {
+  var codeEl = document.getElementById('twofactor-code');
+  var errorEl = document.getElementById('twofactor-error');
+  var submitBtn = document.getElementById('twofactor-submit');
+  var code = (codeEl ? codeEl.value : '').trim();
+
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying…'; }
+  try {
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('login/verify-2fa'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken: state.pendingTwoFactor, code: code }),
+    });
+    var result = await res.json();
+    if (!res.ok || !result.ok) {
+      throw new Error(result.message || 'Invalid code.');
+    }
+    state.pendingTwoFactor = null;
+    API.setToken(result.token);
+    API.setSession({ id: result.user.id, username: result.user.username, fullName: result.user.fullName, role: result.user.role, twoFactorEnabled: !!result.user.twoFactorEnabled });
+    state.currentUser = result.user;
+    state.currentView = 'dashboard';
+    render();
+    loadDashboardData();
+  } catch (e) {
+    if (errorEl) { errorEl.textContent = e.message || 'Invalid code.'; errorEl.classList.remove('hidden'); }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verify'; }
+  }
+}
+
 function renderLoggedOutScreen() {
   return '<div class="flex w-full min-h-screen items-center justify-center p-4" style="background:#F8F7FA">' +
     '<div class="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">' +
@@ -541,6 +677,7 @@ var sidebarGroups = [
   { title: 'Administration', items: [
     { key: 'reports', label: 'Reporting & Compliance', icon: 'clipboard-list' },
     { key: 'users', label: 'User Access Control', icon: 'shield' },
+    { key: 'privacyConsents', label: 'Privacy Consent Tracking', icon: 'file-check' },
   ]},
 ];
 
@@ -567,11 +704,8 @@ function renderSidebar() {
     '</div>' +
     /* Navigation */
     '<nav class="flex-1 overflow-x-hidden py-3">';
-  console.log('Rendering sidebar, sidebarGroups:', sidebarGroups);
   sidebarGroups.forEach(function(group) {
-    console.log('Processing group:', group.title, 'items:', group.items);
     var allowedItems = group.items.filter(function(item) { return canAccessView(item.key); });
-    console.log('Allowed items for group', group.title, ':', allowedItems);
     if (allowedItems.length === 0) return;
     html += '<div class="mb-2">';
     if (!collapsed) {
@@ -659,10 +793,10 @@ function renderTopbar() {
     '<div id="notif-list" class="max-h-64 overflow-y-auto"><p class="px-3 py-4 text-xs text-center" style="color:#5A4A62">Loading&hellip;</p></div>' +
     '</div>' +
     '</div>' +
-    '<div class="flex items-center gap-2 cursor-pointer">' +
+    '<button data-action="open-security-modal" class="flex items-center gap-2 cursor-pointer rounded-lg px-1 py-0.5 hover:bg-[#FDF6F8]">' +
     '<div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style="background:linear-gradient(135deg,#7B1028,#B01838);color:#F0ECF2">' + esc(initial) + '</div>' +
     '<span class="text-xs font-medium hidden sm:block" style="color:#5A4A62">' + esc(name) + '</span>' +
-    '</div>' +
+    '</button>' +
     '</div>' +
     '</header>';
 }
@@ -680,9 +814,44 @@ function renderMobileNav() {
 
 /* ============================== DASHBOARD ============================== */
 
+function renderSelfServiceDashboard(dashData) {
+  var name = (state.currentUser && state.currentUser.fullName) || 'there';
+  var upcoming = dashData.upcomingAppointments || [];
+  var history = dashData.appointmentHistory || [];
+  var html = '<div>' +
+    '<h2 class="font-serif-heading text-lg font-semibold mb-1" style="color:#2B2B2B">Welcome, ' + esc(name) + '</h2>' +
+    '<p class="text-xs mb-6" style="color:#5A4A62">Book appointments and track your visit history here.</p>';
+
+  if (!dashData.linked) {
+    html += '<div class="rounded-lg px-4 py-3 text-sm mb-6" style="background:#FDF6F8;color:#C13030">Your account is not yet linked to a student/staff record. Contact your administrator.</div>';
+  }
+
+  html += '<h3 class="text-sm font-semibold mb-2" style="color:#2B2B2B">Upcoming Appointments</h3>' +
+    '<div class="mb-6 rounded-2xl border shadow-sm overflow-hidden" style="border-color:#E8D4DB;background:#FDF6F8">' +
+    (upcoming.length === 0
+      ? '<p class="p-4 text-xs" style="color:#5A4A62">No upcoming appointments. Use "Appointment Scheduling" in the sidebar to book one.</p>'
+      : upcoming.map(function(a) {
+          return '<div class="p-3 border-b last:border-0 flex justify-between" style="border-color:#E8D4DB"><span class="text-xs" style="color:#2B2B2B">' + esc(a.date) + ' at ' + esc(a.time) + '</span>' + renderBadge(a.status) + '</div>';
+        }).join('')) +
+    '</div>' +
+    '<h3 class="text-sm font-semibold mb-2" style="color:#2B2B2B">Appointment History</h3>' +
+    '<div class="rounded-2xl border shadow-sm overflow-hidden" style="border-color:#E8D4DB;background:#FDF6F8">' +
+    (history.length === 0
+      ? '<p class="p-4 text-xs" style="color:#5A4A62">No appointment history yet.</p>'
+      : history.map(function(a) {
+          return '<div class="p-3 border-b last:border-0 flex justify-between" style="border-color:#E8D4DB"><span class="text-xs" style="color:#2B2B2B">' + esc(a.date) + ' at ' + esc(a.time) + '</span>' + renderBadge(a.status) + '</div>';
+        }).join('')) +
+    '</div></div>';
+  return html;
+}
+
 function renderDashboard() {
   if (state.loadingData) {
     return renderLoader('Loading dashboard data…', 32);
+  }
+
+  if (state.dashData && state.dashData.selfService) {
+    return renderSelfServiceDashboard(state.dashData);
   }
 
   var dashData = state.dashData || {
@@ -900,6 +1069,24 @@ function renderDashboard() {
 }
 
 /* ============================== REPORTS ============================== */
+// Audit trail rows only — filters by acting user, module (the 'resource'
+// field), and a date range against created_at. Used for both the on-screen
+// count and the CSV export, so what you see is exactly what you download.
+function filterAuditRows(rows, filter) {
+  var user = (filter.user || '').trim().toLowerCase();
+  var resource = filter.resource || '';
+  var fromMs = filter.dateFrom ? new Date(filter.dateFrom + 'T00:00:00').getTime() : null;
+  var toMs = filter.dateTo ? new Date(filter.dateTo + 'T23:59:59').getTime() : null;
+  return (rows || []).filter(function(r) {
+    if (user && String(r.username || '').toLowerCase().indexOf(user) === -1) return false;
+    if (resource && r.resource !== resource) return false;
+    var ts = Number(r.createdAt || 0);
+    if (fromMs !== null && ts < fromMs) return false;
+    if (toMs !== null && ts > toMs) return false;
+    return true;
+  });
+}
+
 function renderReports() {
   var html = '<div>' +
     '<div class="mb-6 flex items-center justify-between">' +
@@ -915,10 +1102,11 @@ function renderReports() {
     return html;
   }
 
-  var reports = state.reportsData || { records: {}, summary: { lowStock: 0, openIncidents: 0, expiredClearance: 0, pendingAppointments: 0 } };
+  var reports = state.reportsData || { records: {}, summary: { lowStock: 0, openIncidents: 0, expiredClearance: 0, pendingAppointments: 0, auditEvents: 0, failedLogins: 0 } };
   var summary = reports.summary;
+  state.auditFilter = state.auditFilter || { user: '', resource: '', dateFrom: '', dateTo: '' };
 
-  html += '<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">' +
+  html += '<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">' +
     '<div class="rounded-2xl border p-4 shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
     '<p class="text-xs" style="color:#5A4A62">Low Stock Medicines</p>' +
     '<p class="font-mono-data mt-1 text-2xl font-semibold" style="color:#C9A24E">' + summary.lowStock + '</p></div>' +
@@ -931,26 +1119,93 @@ function renderReports() {
     '<div class="rounded-2xl border p-4 shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
     '<p class="text-xs" style="color:#5A4A62">Pending Appointments</p>' +
     '<p class="font-mono-data mt-1 text-2xl font-semibold" style="color:#7B1028">' + summary.pendingAppointments + '</p></div>' +
+    '<div class="rounded-2xl border p-4 shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
+    '<p class="text-xs" style="color:#5A4A62">Audit Trail Events</p>' +
+    '<p class="font-mono-data mt-1 text-2xl font-semibold" style="color:#2A6B9B">' + (summary.auditEvents || 0) + '</p></div>' +
+    '<div class="rounded-2xl border p-4 shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
+    '<p class="text-xs" style="color:#5A4A62">Failed / Blocked Logins</p>' +
+    '<p class="font-mono-data mt-1 text-2xl font-semibold" style="color:#C13030">' + (summary.failedLogins || 0) + '</p></div>' +
     '</div>';
 
   var rows = [
-    { label: 'Student Medical Records', key: 'students', filename: 'student_medical_records.csv' },
-    { label: 'Clinic Visits Logged', key: 'visits', filename: 'clinic_visits.csv' },
-    { label: 'Medicines in Inventory', key: 'medicine', filename: 'medicine_inventory.csv' },
-    { label: 'Appointments Scheduled', key: 'appointments', filename: 'appointments.csv' },
-    { label: 'Incident Reports', key: 'incidents', filename: 'incident_reports.csv' },
-    { label: 'Faculty & Staff Records', key: 'staff', filename: 'staff_health_records.csv' },
-    { label: 'Health Programs', key: 'programs', filename: 'health_programs.csv' },
-    { label: 'Health Clearances', key: 'clearance', filename: 'health_clearances.csv' },
+    { section: 'Student Medical Records', label: 'Student Medical Profiles', key: 'students', filename: 'student_medical_records.csv' },
+    { section: 'Student Medical Records', label: 'Medical History Report', key: 'medicalHistory', filename: 'medical_history.csv' },
+
+    { section: 'Clinic Visit & Consultation', label: 'Daily Patients', key: 'dailyPatients', filename: 'daily_patients.csv' },
+    { section: 'Clinic Visit & Consultation', label: 'Weekly Patients', key: 'weeklyPatients', filename: 'weekly_patients.csv' },
+    { section: 'Clinic Visit & Consultation', label: 'Monthly Visits', key: 'monthlyVisits', filename: 'monthly_visits.csv' },
+    { section: 'Clinic Visit & Consultation', label: 'Most Common Illnesses', key: 'mostCommonIllnesses', filename: 'most_common_illnesses.csv' },
+    { section: 'Clinic Visit & Consultation', label: 'Student Visit History', key: 'visits', filename: 'clinic_visits.csv' },
+
+    { section: 'Medicine Inventory & Dispensing', label: 'Medicine Inventory', key: 'medicine', filename: 'medicine_inventory.csv' },
+    { section: 'Medicine Inventory & Dispensing', label: 'Expired Medicines', key: 'expiredMedicines', filename: 'expired_medicines.csv' },
+    { section: 'Medicine Inventory & Dispensing', label: 'Near Expiration', key: 'nearExpirationMedicines', filename: 'near_expiration_medicines.csv' },
+    { section: 'Medicine Inventory & Dispensing', label: 'Low Stock', key: 'lowStockMedicines', filename: 'low_stock_medicines.csv' },
+    { section: 'Medicine Inventory & Dispensing', label: 'Most Dispensed Medicine', key: 'mostDispensedMedicine', filename: 'most_dispensed_medicine.csv' },
+    { section: 'Medicine Inventory & Dispensing', label: 'Medicine Usage', key: 'medicineUsage', filename: 'medicine_usage.csv' },
+
+    { section: 'Appointment Scheduling', label: "Today's Appointments", key: 'todaysAppointments', filename: 'todays_appointments.csv' },
+    { section: 'Appointment Scheduling', label: 'Missed Appointments', key: 'missedAppointments', filename: 'missed_appointments.csv' },
+    { section: 'Appointment Scheduling', label: 'Completed Appointments', key: 'completedAppointments', filename: 'completed_appointments.csv' },
+    { section: 'Appointment Scheduling', label: 'Cancelled Appointments', key: 'cancelledAppointments', filename: 'cancelled_appointments.csv' },
+    { section: 'Appointment Scheduling', label: 'Doctor Availability Schedule', key: 'doctorSchedule', filename: 'doctor_schedule.csv' },
+
+    { section: 'Incident & Emergency Case Management', label: 'Incident Summary', key: 'incidents', filename: 'incident_reports.csv' },
+    { section: 'Incident & Emergency Case Management', label: 'Emergency Cases', key: 'emergencyCases', filename: 'emergency_cases.csv' },
+    { section: 'Incident & Emergency Case Management', label: 'Referral Report', key: 'incidentReferrals', filename: 'incident_referrals.csv' },
+    { section: 'Incident & Emergency Case Management', label: 'Accident Statistics', key: 'accidentStatistics', filename: 'accident_statistics.csv' },
+    { section: 'Incident & Emergency Case Management', label: 'Emergency Treatment Log', key: 'emergencyTreatment', filename: 'emergency_treatment.csv' },
+
+    { section: 'Faculty & Staff Health Services', label: 'Faculty & Staff Records', key: 'staff', filename: 'staff_health_records.csv' },
+    { section: 'Faculty & Staff Health Services', label: 'Employee Health Summary', key: 'employeeMedicalRecord', filename: 'employee_health_summary.csv' },
+    { section: 'Faculty & Staff Health Services', label: 'Employee Visits', key: 'employeeVisit', filename: 'employee_visits.csv' },
+    { section: 'Faculty & Staff Health Services', label: 'Employee Medicine Dispensing', key: 'employeeMedicine', filename: 'employee_medicine.csv' },
+
+    { section: 'School Health Program Monitoring', label: 'Health Programs', key: 'programs', filename: 'health_programs.csv' },
+    { section: 'School Health Program Monitoring', label: 'Student Participation', key: 'participants', filename: 'program_participants.csv' },
+    { section: 'School Health Program Monitoring', label: 'Program Attendance', key: 'attendance', filename: 'program_attendance.csv' },
+    { section: 'School Health Program Monitoring', label: 'Vaccination Coverage', key: 'vaccinationParticipants', filename: 'vaccination_coverage.csv' },
+    { section: 'School Health Program Monitoring', label: 'Health Program Completion', key: 'completedPrograms', filename: 'completed_programs.csv' },
+    { section: 'School Health Program Monitoring', label: 'Program Assessments', key: 'assessment', filename: 'program_assessments.csv' },
+
+    { section: 'Health Clearance & Certification', label: 'Issued Certificates', key: 'issuedCertificates', filename: 'issued_certificates.csv' },
+    { section: 'Health Clearance & Certification', label: 'Pending Certificates', key: 'pendingCertificates', filename: 'pending_certificates.csv' },
+    { section: 'Health Clearance & Certification', label: 'Certificate History', key: 'clearance', filename: 'health_clearances.csv' },
+
+    { section: 'User Access & Confidentiality', label: 'Audit Trail', key: 'auditTrail', filename: 'audit_trail.csv' },
+    { section: 'User Access & Confidentiality', label: 'Login Attempts', key: 'loginAttempts', filename: 'login_attempts.csv' },
   ];
 
   html += '<div class="overflow-hidden rounded-2xl border shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
     '<table class="w-full text-left text-sm">' +
     '<thead><tr class="border-b text-xs uppercase tracking-wide" style="border-color:#E8D4DB;background:#FDF6F8;color:#7A1F3D">' +
-    '<th class="px-4 py-3 font-medium">Dataset</th><th class="px-4 py-3 font-medium">Total Records</th><th class="px-4 py-3 font-medium text-right">Export</th>' +
+    '<th class="px-4 py-3 font-medium">Report</th><th class="px-4 py-3 font-medium">Total Records</th><th class="px-4 py-3 font-medium text-right">Export</th>' +
     '</tr></thead><tbody>';
+  var auditModules = Array.from(new Set((reports.records.auditTrail || []).map(function(r) { return r.resource; }).filter(Boolean))).sort();
+  var lastSection = null;
   rows.forEach(function(r) {
+    if (r.section !== lastSection) {
+      html += '<tr style="background:#F0ECF2"><td colspan="3" class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wide" style="color:#7A1F3D">' + esc(r.section) + '</td></tr>';
+      lastSection = r.section;
+    }
+    if (r.key === 'auditTrail') {
+      var af = state.auditFilter;
+      html += '<tr style="background:#FDF6F8"><td colspan="3" class="px-4 py-3">' +
+        '<div class="flex flex-wrap items-center gap-2">' +
+        '<input id="audit-filter-user" type="text" value="' + esc(af.user) + '" placeholder="Filter by user…" class="rounded-lg border px-2 py-1.5 text-xs" style="border-color:#E8D4DB;width:140px" />' +
+        '<select id="audit-filter-resource" class="rounded-lg border px-2 py-1.5 text-xs" style="border-color:#E8D4DB">' +
+        '<option value="">All modules</option>' + auditModules.map(function(m) { return '<option value="' + esc(m) + '"' + (af.resource === m ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('') +
+        '</select>' +
+        '<input id="audit-filter-from" type="date" value="' + esc(af.dateFrom) + '" class="rounded-lg border px-2 py-1.5 text-xs" style="border-color:#E8D4DB" />' +
+        '<span class="text-[10px]" style="color:#7A7A7A">to</span>' +
+        '<input id="audit-filter-to" type="date" value="' + esc(af.dateTo) + '" class="rounded-lg border px-2 py-1.5 text-xs" style="border-color:#E8D4DB" />' +
+        '<button data-action="clear-audit-filter" type="button" class="rounded-lg px-2 py-1.5 text-xs" style="background:#F0ECF2;color:#7A1F3D">Clear</button>' +
+        '</div></td></tr>';
+    }
     var items = reports.records[r.key] || [];
+    if (r.key === 'auditTrail' || r.key === 'loginAttempts') {
+      items = filterAuditRows(items, state.auditFilter);
+    }
     html += '<tr class="border-b last:border-0" style="border-color:#E8D4DB">' +
       '<td class="px-4 py-3" style="color:#2B2B2B">' + esc(r.label) + '</td>' +
       '<td class="px-4 py-3" style="color:#5A4A62">' + items.length + '</td>' +
@@ -978,6 +1233,7 @@ function renderAppointmentsModule() {
       renderMainContent();
     }).catch(function() { ms.groups = []; renderMainContent(); });
   }
+  lazyLoadPatientLinkLists(ms);
   var pendingCount = items.filter(function(i) { return i.status === 'Pending'; }).length;
   var confirmedCount = items.filter(function(i) { return i.status === 'Confirmed'; }).length;
   var completedCount = items.filter(function(i) { return i.status === 'Completed'; }).length;
@@ -1007,13 +1263,15 @@ function renderAppointmentsModule() {
     '<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0ECF2] text-[#2A8B4A]">' +
     icon('calendar-check', 20) + '</div>' +
     '<div><h2 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Appointment Scheduling System</h2>' +
-    '<p class="text-xs" style="color:#5A4A62">' + ms.items.length + ' appointment' + (ms.items.length !== 1 ? 's' : '') + ' on file</p></div>' +
+    '<p class="text-xs" style="color:#5A4A62">' + items.length + ' appointment' + (items.length !== 1 ? 's' : '') + ' on file</p></div>' +
     '</div>' +
     '<div class="flex gap-2">' +
     '<button id="export-appointments" class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' + icon('download', 15) + ' Export</button>' +
+    '<button data-action="open-doctor-schedule" class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' + icon('calendar-clock', 15) + ' Doctor Schedule</button>' +
     '<button data-action="add" data-module="appointments" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">' +
     icon('plus', 16) + ' Schedule Appointment</button>' +
-    '</div></div>';
+    '</div></div>' +
+    (state.doctorScheduleModal && state.doctorScheduleModal.open ? renderDoctorScheduleModal() : '');
 
   html += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">';
   [
@@ -1098,12 +1356,14 @@ function renderAppointmentsModule() {
     var modalTitle = ms.editing ? 'Edit Appointment' : 'Schedule Appointment';
     var mc = '';
     if (ms.error) mc += '<div class="mb-4 rounded-lg px-3 py-2 text-sm" style="background:#FDF6F8;color:#C13030">' + esc(ms.error) + '</div>';
+    mc += renderPatientLinkSelector('appointments', ms);
     mc += '<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">';
     if (!ms.editing) {
       mc += '<div class="sm:col-span-2"><label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Appointment ID</label>' +
         '<div class="w-full rounded-lg border border-[#E8D4DB] px-3 py-2 text-sm font-mono-data" style="background:#F8F7FA;color:#C9A227">' + esc(generateAppointmentId(items)) + '</div></div>';
     }
     APPOINTMENT_FIELDS.forEach(function(f) {
+      if (f.type === 'hidden') { mc += renderFieldInput(f, ms.form[f.name], key + '_' + f.name); return; }
       mc += '<div class="' + (f.type === 'textarea' ? 'sm:col-span-2' : '') + '">' +
         '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">' + esc(f.label) + (f.required ? '<span style="color:#C13030"> *</span>' : '') + '</label>' +
         renderFieldInput(f, ms.form[f.name], key + '_' + f.name) +
@@ -1137,6 +1397,7 @@ function renderAppointmentsModule() {
       '</div>' +
       '<div class="px-6 pb-6"><button data-view-close class="w-full py-2 rounded-lg text-xs" style="background:#FFFFFF;color:#5A4A62;border:1px solid #E8D4DB">Close</button></div>' +
       '</div></div>';
+    }
   }
 
   if (ms.deleteTarget) {
@@ -1146,14 +1407,115 @@ function renderAppointmentsModule() {
   html += '</div>';
   return html;
 }
-}
 
 /* ============================== VISITS MODULE ============================== */
+
+// Dispenses straight from live inventory (stock-deducting /api/dispensing,
+// same endpoint the Medicine Inventory page's own dispense action uses)
+// instead of the visit's "Medicine Dispensed" field being disconnected
+// free text — the text field stays as a running log, appended to on dispense.
+function renderVisitDispenseWidget(visit, ms) {
+  var loading = ms.allMedicines === null;
+  var medOptions = '<option value="">Select medicine…</option>' + (ms.allMedicines || []).map(function(m) {
+    return '<option value="' + esc(m.id) + '">' + esc(m.name) + ' (stock: ' + esc(m.stock) + ')</option>';
+  }).join('');
+
+  return '<div class="mt-4 p-3 rounded-lg border" style="border-color:#E8D4DB">' +
+    '<p class="text-[10px] font-semibold mb-2" style="color:#2B2B2B">Dispense Medicine</p>' +
+    (loading ? '<p class="text-xs" style="color:#7A7A7A">Loading inventory…</p>' :
+    '<div class="grid grid-cols-2 gap-2">' +
+    '<select id="visit-dispense-medicine" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' + medOptions + '</select>' +
+    '<input id="visit-dispense-quantity" type="number" min="1" placeholder="Quantity" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<button data-action="dispense-from-visit" data-visit-id="' + esc(visit.id) + '" class="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">Dispense</button>' +
+    '</div>') +
+    '</div>';
+}
+
+async function dispenseFromVisit(visitId) {
+  var ms = getModuleState('visits');
+  var visit = ms.items.find(function(i) { return i.id === visitId; });
+  if (!visit) return;
+  var medicineSelect = document.getElementById('visit-dispense-medicine');
+  var medicineId = medicineSelect ? medicineSelect.value : '';
+  var medicineName = medicineSelect && medicineSelect.selectedIndex > 0 ? medicineSelect.options[medicineSelect.selectedIndex].text.replace(/\s*\(stock:.*\)$/, '') : '';
+  var quantity = parseInt((document.getElementById('visit-dispense-quantity') || {}).value || '0', 10);
+  if (!medicineId || !quantity || quantity <= 0) {
+    showToast('Select a medicine and enter a valid quantity.', 'error');
+    return;
+  }
+  try {
+    await API.create('dispensing', {
+      studentId: visit.studentId || '',
+      patientName: visit.patientName || '',
+      medicineId: medicineId,
+      quantity: quantity,
+    });
+    var note = medicineName + ' x' + quantity;
+    var updated = (visit.medicineDispensed ? visit.medicineDispensed + '; ' : '') + note;
+    await API.update('visits', visitId, { medicineDispensed: updated });
+    visit.medicineDispensed = updated;
+    ms.allMedicines = undefined;
+    ms.items = await API.list('visits');
+    showToast('Medicine dispensed.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to dispense medicine.', 'error');
+  }
+}
+
+function renderVisitAiWidget(visit, ms) {
+  if (!visit.diagnosis) return '';
+  var ai = ms.aiAnalysis && ms.aiAnalysis.visitId === visit.id ? ms.aiAnalysis : null;
+
+  var body = '';
+  if (ai && ai.loading) {
+    body = '<p class="text-xs" style="color:#7A7A7A">Requesting AI insights…</p>';
+  } else if (ai && ai.error) {
+    body = '<p class="text-xs" style="color:#C13030">' + esc(ai.error) + '</p>';
+  } else if (ai && ai.text) {
+    body = '<p class="text-xs whitespace-pre-line" style="color:#2B2B2B">' + esc(ai.text) + '</p>' +
+      '<p class="mt-2 text-[10px]" style="color:#7A7A7A">' + esc(ai.disclaimer || AI_DISCLAIMER) + '</p>';
+  } else {
+    body = '<button data-action="ai-analyze-visit" data-visit-id="' + esc(visit.id) + '" class="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[#7B1028] hover:bg-[#3F0D1D]">Get AI Insights</button>';
+  }
+
+  return '<div class="mt-4 p-3 rounded-lg border" style="border-color:#E8D4DB">' +
+    '<p class="text-[10px] font-semibold mb-2" style="color:#2B2B2B">AI Insights</p>' +
+    body +
+    '</div>';
+}
+
+async function analyzeVisitAi(visitId) {
+  var ms = getModuleState('visits');
+  ms.aiAnalysis = { visitId: visitId, loading: true };
+  renderMainContent();
+  try {
+    var res = await API.analyzeVisit(visitId);
+    if (res.status === 'success') {
+      ms.aiAnalysis = { visitId: visitId, text: res.analysis, disclaimer: res.disclaimer };
+    } else {
+      ms.aiAnalysis = { visitId: visitId, error: res.message || 'AI analysis is unavailable.' };
+    }
+  } catch (e) {
+    ms.aiAnalysis = { visitId: visitId, error: e.message || 'AI analysis request failed.' };
+  }
+  renderMainContent();
+}
+
 function renderVisitsModule() {
   var key = 'visits';
   var config = MODULES[key];
   var ms = getModuleState(key);
   var items = ms.items || [];
+
+  if (typeof ms.allMedicines === 'undefined') {
+    ms.allMedicines = null;
+    API.list('medicine').then(function(list) {
+      ms.allMedicines = list || [];
+      renderMainContent();
+    }).catch(function() { ms.allMedicines = []; renderMainContent(); });
+  }
+  lazyLoadPatientLinkLists(ms);
 
   var filtered = items;
   var s = (ms.search || '').toLowerCase();
@@ -1290,6 +1652,7 @@ function renderVisitsModule() {
     var modalTitle = ms.editing ? 'Edit Visit Record' : 'Log New Clinic Visit';
     var mc2 = '';
     if (ms.error) mc2 += '<div class="mb-4 rounded-lg px-3 py-2 text-sm" style="background:#FDF6F8;color:#C13030">' + esc(ms.error) + '</div>';
+    mc2 += renderPatientLinkSelector('visits', ms);
     mc2 += '<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">';
     if (!ms.editing) {
       var newId = generateVisitId(ms.items);
@@ -1297,6 +1660,7 @@ function renderVisitsModule() {
         '<div class="w-full rounded-lg border border-[#E8D4DB] px-3 py-2 text-sm font-mono-data" style="background:#F8F7FA;color:#C9A227">' + esc(newId) + '</div></div>';
     }
     config.fields.forEach(function(f) {
+      if (f.type === 'hidden') { mc2 += renderFieldInput(f, ms.form[f.name], key + '_' + f.name); return; }
       mc2 += '<div class="' + (f.type === 'textarea' ? 'sm:col-span-2' : '') + '">' +
         '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">' + esc(f.label) + (f.required ? '<span style="color:#C13030"> *</span>' : '') + '</label>' +
         renderFieldInput(f, ms.form[f.name], key + '_' + f.name, key === 'visits' && (f.name === 'date' || f.name === 'time')) +
@@ -1337,8 +1701,11 @@ function renderVisitsModule() {
         return '<div class="p-3 rounded-lg" style="background:#FDF6F8"><p class="text-[10px] mb-1" style="color:#7A7A7A">' + esc(item.label) + '</p><p class="text-xs" style="color:#2B2B2B">' + esc(item.val) + '</p></div>';
       }).join('') +
       '</div>' +
+      renderVisitDispenseWidget(vv, ms) +
+      renderVisitAiWidget(vv, ms) +
       '<button data-view-close class="mt-4 w-full py-2 rounded-lg text-xs" style="background:#FFFFFF;color:#5A4A62;border:1px solid #E8D4DB">Close</button>' +
       '</div></div></div>';
+    }
   }
 
   if (ms.deleteTarget) {
@@ -1347,7 +1714,6 @@ function renderVisitsModule() {
 
   html += '</div>';
   return html;
-}
 }
 
 function renderRecordGroupPage(ms) {
@@ -1477,10 +1843,6 @@ function renderMedicalRecordsModule() {
   var config = MODULES[key];
   var ms = getModuleState(key);
   var items = ms.items || [];
-
-  if (Array.isArray(ms.groups) && !ms.groups.length) {
-    delete ms.groups;
-  }
 
   loadMedicalRecordGroups(ms);
 
@@ -1811,13 +2173,732 @@ function renderMedicalRecordsModule() {
   return html;
 }
 
+/* ============================== EMERGENCY TREATMENT LOG ============================== */
+function renderEmergencyTreatmentSection(incident, ms) {
+  var list = (ms.allTreatments || []).filter(function(t) { return t.incidentId === incident.id; });
+  var itemsHtml = list.length
+    ? list.map(function(t) {
+        return '<div class="p-3 rounded-lg mb-2" style="background:#FDF6F8;border:1px solid #E8D4DB">' +
+          '<div class="flex justify-between text-[10px]" style="color:#7A7A7A"><span>' + esc(t.date || '') + '</span><span>' + esc(t.nurse || '') + '</span></div>' +
+          '<p class="text-xs mt-1" style="color:#2B2B2B">' + esc(t.treatment || '') + '</p>' +
+          (t.medicine ? '<p class="text-[10px] mt-1" style="color:#5A4A62">Medicine: ' + esc(t.medicine) + '</p>' : '') +
+          (t.remarks ? '<p class="text-[10px] mt-1" style="color:#7A7A7A">' + esc(t.remarks) + '</p>' : '') +
+          '</div>';
+      }).join('')
+    : '<p class="text-xs" style="color:#7A7A7A">No treatment entries yet.</p>';
+
+  var bodyHtml = ms.allTreatments === null
+    ? '<p class="text-xs" style="color:#7A7A7A">Loading treatment history…</p>'
+    : itemsHtml;
+
+  return '<div class="px-6 pb-4 border-t pt-4" style="border-color:#E8D4DB">' +
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Emergency Treatment Log</h4>' +
+    '<div class="max-h-40 overflow-y-auto mb-3">' + bodyHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<input id="et-treatment" type="text" placeholder="Treatment given" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="et-medicine" type="text" placeholder="Medicine (optional)" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="et-nurse" type="text" placeholder="Nurse / Doctor" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="add-treatment" data-incident-id="' + esc(incident.id) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#7B1028] hover:bg-[#3F0D1D]">Add Treatment Entry</button>' +
+    '</div>';
+}
+
+async function addEmergencyTreatment(incidentId) {
+  var ms = getModuleState('incidents');
+  var treatmentEl = document.getElementById('et-treatment');
+  var medicineEl = document.getElementById('et-medicine');
+  var nurseEl = document.getElementById('et-nurse');
+  var treatment = (treatmentEl && treatmentEl.value || '').trim();
+  if (!treatment) {
+    showToast('Please enter the treatment given.', 'error');
+    return;
+  }
+  try {
+    await API.create('emergencyTreatment', {
+      incidentId: incidentId,
+      treatment: treatment,
+      medicine: (medicineEl && medicineEl.value || '').trim(),
+      nurse: (nurseEl && nurseEl.value || '').trim(),
+      date: todayStr(),
+    });
+    ms.allTreatments = undefined;
+    showToast('Treatment entry recorded.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to record treatment entry.', 'error');
+  }
+}
+
+/* ============================== EMPLOYEE MEDICAL PROFILE ============================== */
+function renderEmployeeHealthSection(staffMember, ms) {
+  var record = (ms.allEmployeeRecords || []).find(function(r) { return r.staffId === staffMember.id; });
+
+  var summaryHtml;
+  if (ms.allEmployeeRecords === null) {
+    summaryHtml = '<p class="text-xs" style="color:#7A7A7A">Loading medical profile…</p>';
+  } else if (record) {
+    summaryHtml = [
+      { label: 'Blood Type', val: record.bloodType || '—' },
+      { label: 'Allergies', val: record.allergies || '—' },
+      { label: 'Medical Conditions', val: record.medicalConditions || '—' },
+      { label: 'Immunization Status', val: record.immunizationStatus || '—' },
+      { label: 'Last Physical Exam', val: fmtDate(record.lastPhysicalExam) },
+    ].map(function(item) {
+      return '<div class="flex justify-between p-2 rounded-lg mb-1" style="background:#FDF6F8">' +
+        '<span class="text-[10px]" style="color:#7A7A7A">' + esc(item.label) + '</span>' +
+        '<span class="text-xs" style="color:#2B2B2B">' + esc(item.val) + '</span>' +
+        '</div>';
+    }).join('');
+  } else {
+    summaryHtml = '<p class="text-xs" style="color:#7A7A7A">No medical profile on file yet.</p>';
+  }
+
+  var bt = record ? record.bloodType : '';
+  var btOptions = ['', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(function(o) {
+    return '<option value="' + o + '"' + (bt === o ? ' selected' : '') + '>' + (o || 'Blood Type') + '</option>';
+  }).join('');
+
+  return '<div class="px-6 pb-4 border-t pt-4" style="border-color:#E8D4DB">' +
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Employee Medical Profile</h4>' +
+    '<div class="mb-3">' + summaryHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<select id="emr-bloodtype" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' + btOptions + '</select>' +
+    '<input id="emr-lastexam" type="date" value="' + esc(record ? record.lastPhysicalExam : '') + '" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="emr-allergies" type="text" placeholder="Allergies" value="' + esc(record ? record.allergies : '') + '" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="emr-immunization" type="text" placeholder="Immunization status" value="' + esc(record ? record.immunizationStatus : '') + '" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="emr-conditions" type="text" placeholder="Medical conditions" value="' + esc(record ? record.medicalConditions : '') + '" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="save-employee-record" data-staff-id="' + esc(staffMember.id) + '" data-record-id="' + esc(record ? record.id : '') + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#7B1028] hover:bg-[#3F0D1D]">Save Medical Profile</button>' +
+    '</div>';
+}
+
+async function saveEmployeeMedicalRecord(staffId, recordId) {
+  var ms = getModuleState('staff');
+  var data = {
+    staffId: staffId,
+    bloodType: (document.getElementById('emr-bloodtype') || {}).value || '',
+    allergies: ((document.getElementById('emr-allergies') || {}).value || '').trim(),
+    medicalConditions: ((document.getElementById('emr-conditions') || {}).value || '').trim(),
+    immunizationStatus: ((document.getElementById('emr-immunization') || {}).value || '').trim(),
+    lastPhysicalExam: (document.getElementById('emr-lastexam') || {}).value || '',
+  };
+  try {
+    if (recordId) {
+      await API.update('employeeMedicalRecord', recordId, data);
+    } else {
+      await API.create('employeeMedicalRecord', data);
+    }
+    ms.allEmployeeRecords = undefined;
+    showToast('Employee medical profile saved.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to save medical profile.', 'error');
+  }
+}
+
+function renderEmployeeVisitMedicineSection(staffMember, ms) {
+  var visits = (ms.allEmployeeVisits || []).filter(function(v) { return v.staffId === staffMember.id; });
+  var meds = (ms.allEmployeeMedicine || []).filter(function(m) { return m.staffId === staffMember.id; });
+  var loading = ms.allEmployeeVisits === null;
+
+  var visitsHtml = loading
+    ? '<p class="text-xs" style="color:#7A7A7A">Loading visit history…</p>'
+    : (visits.length
+        ? visits.map(function(v) {
+            return '<div class="p-2 rounded-lg mb-1 text-xs" style="background:#FDF6F8"><div class="flex justify-between"><span style="color:#2B2B2B">' + esc(v.date) + '</span><span style="color:#7A7A7A">' + esc(v.nurseOnDuty || '') + '</span></div>' +
+              (v.complaint ? '<p style="color:#5A4A62">Complaint: ' + esc(v.complaint) + '</p>' : '') +
+              (v.diagnosis ? '<p style="color:#5A4A62">Diagnosis: ' + esc(v.diagnosis) + '</p>' : '') +
+              '</div>';
+          }).join('')
+        : '<p class="text-xs" style="color:#7A7A7A">No visits logged yet.</p>');
+
+  var medsHtml = loading ? '' : (meds.length
+    ? meds.map(function(m) {
+        return '<div class="flex justify-between text-[10px] p-1.5 rounded" style="background:#FDF6F8;color:#5A4A62"><span>' + esc(m.medicineName) + ' x' + esc(m.quantity) + '</span><span>' + esc(m.dateReleased) + '</span></div>';
+      }).join('')
+    : '<p class="text-[10px]" style="color:#7A7A7A">No medicine dispensed yet.</p>');
+
+  var medOptions = '<option value="">Select medicine…</option>' + (ms.allMedicines || []).map(function(m) {
+    return '<option value="' + esc(m.id) + '">' + esc(m.name) + ' (stock: ' + esc(m.stock) + ')</option>';
+  }).join('');
+
+  return '<div class="px-6 pb-4 border-t pt-4" style="border-color:#E8D4DB">' +
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Visit History</h4>' +
+    '<div class="mb-2">' + visitsHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<input id="ev-complaint" type="text" placeholder="Complaint" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="ev-diagnosis" type="text" placeholder="Diagnosis" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="ev-treatment" type="text" placeholder="Treatment" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="add-employee-visit" data-staff-id="' + esc(staffMember.id) + '" data-staff-name="' + esc(staffMember.name) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#2A6B9B] hover:bg-[#1B4A6B] mb-4">Log Visit</button>' +
+
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Medicine Dispensed</h4>' +
+    '<div class="mb-2 space-y-1">' + medsHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<select id="ev-medicine" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' + medOptions + '</select>' +
+    '<input id="ev-quantity" type="number" min="1" placeholder="Quantity" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="add-employee-medicine" data-staff-id="' + esc(staffMember.id) + '" data-staff-name="' + esc(staffMember.name) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">Dispense Medicine</button>' +
+    '</div>';
+}
+
+async function addEmployeeVisit(staffId, staffName) {
+  var ms = getModuleState('staff');
+  var complaint = ((document.getElementById('ev-complaint') || {}).value || '').trim();
+  var diagnosis = ((document.getElementById('ev-diagnosis') || {}).value || '').trim();
+  var treatment = ((document.getElementById('ev-treatment') || {}).value || '').trim();
+  try {
+    await API.create('employeeVisit', {
+      staffId: staffId, staffName: staffName, date: todayStr(),
+      complaint: complaint, diagnosis: diagnosis, treatment: treatment,
+      nurseOnDuty: (state.currentUser && state.currentUser.fullName) || '',
+    });
+    ms.allEmployeeVisits = undefined;
+    showToast('Employee visit logged.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to log visit.', 'error');
+  }
+}
+
+async function addEmployeeMedicine(staffId, staffName) {
+  var ms = getModuleState('staff');
+  var medicineId = (document.getElementById('ev-medicine') || {}).value || '';
+  var quantity = parseInt((document.getElementById('ev-quantity') || {}).value || '0', 10);
+  if (!medicineId || !quantity || quantity <= 0) {
+    showToast('Select a medicine and enter a valid quantity.', 'error');
+    return;
+  }
+  try {
+    await API.create('employeeMedicine', { staffId: staffId, staffName: staffName, medicineId: medicineId, quantity: quantity });
+    ms.allEmployeeMedicine = undefined;
+    ms.allMedicines = undefined;
+    showToast('Medicine dispensed.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to dispense medicine.', 'error');
+  }
+}
+
+/* ============================== HEALTH PROGRAM MONITORING ============================== */
+function renderProgramMonitoringSection(program, ms) {
+  var participants = (ms.allParticipants || []).filter(function(p) { return p.programId === program.id; });
+  var attendance = (ms.allAttendance || []).filter(function(a) { return a.programId === program.id; });
+  var assessments = (ms.allAssessments || []).filter(function(a) { return a.programId === program.id; });
+  var loading = ms.allParticipants === null;
+
+  var participantsHtml = loading
+    ? '<p class="text-xs" style="color:#7A7A7A">Loading participants…</p>'
+    : (participants.length
+        ? participants.map(function(p) {
+            return '<div class="flex justify-between items-center p-2 rounded-lg mb-1" style="background:#FDF6F8">' +
+              '<span class="text-xs" style="color:#2B2B2B">' + esc(p.studentName || p.studentId) + '</span>' +
+              '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#F0ECF2;color:#5A4A62">' + esc(p.eligibility || p.status || '—') + '</span>' +
+              '</div>';
+          }).join('')
+        : '<p class="text-xs" style="color:#7A7A7A">No participants assigned yet.</p>');
+
+  var participantOptions = '<option value="">Select participant…</option>' + participants.map(function(p) {
+    return '<option value="' + esc(p.id) + '">' + esc(p.studentName || p.studentId) + '</option>';
+  }).join('');
+
+  var attendanceHtml = loading ? '' : (attendance.length
+    ? attendance.slice(-5).map(function(a) {
+        var pName = (participants.find(function(p) { return p.id === a.participantId; }) || {}).studentName || a.participantId;
+        return '<div class="flex justify-between text-[10px] p-1.5 rounded" style="background:#FDF6F8;color:#5A4A62"><span>' + esc(pName) + '</span><span>' + esc(a.attendanceDate) + ' · ' + esc(a.status) + '</span></div>';
+      }).join('')
+    : '<p class="text-[10px]" style="color:#7A7A7A">No attendance recorded yet.</p>');
+
+  var assessmentHtml = loading ? '' : (assessments.length
+    ? assessments.slice(-5).map(function(a) {
+        var pName = (participants.find(function(p) { return p.id === a.participantId; }) || {}).studentName || a.participantId;
+        return '<div class="p-2 rounded-lg mb-1 text-[10px]" style="background:#FDF6F8;color:#5A4A62"><strong>' + esc(pName) + '</strong>: ' + esc(a.result) + (a.remarks ? ' — ' + esc(a.remarks) : '') + '</div>';
+      }).join('')
+    : '<p class="text-[10px]" style="color:#7A7A7A">No assessments recorded yet.</p>');
+
+  return '<div class="px-6 pb-4 border-t pt-4" style="border-color:#E8D4DB">' +
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Participants</h4>' +
+    '<div class="max-h-32 overflow-y-auto mb-2">' + participantsHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<input id="prog-student-id" type="text" placeholder="Student ID" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="prog-student-name" type="text" placeholder="Student Name" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<select id="prog-eligibility" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' +
+    ['Eligible', 'Not Eligible', 'Pending Review'].map(function(o) { return '<option value="' + o + '">' + o + '</option>'; }).join('') +
+    '</select>' +
+    '</div>' +
+    '<button data-action="add-participant" data-program-id="' + esc(program.id) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#7B1028] hover:bg-[#3F0D1D] mb-4">Add Participant</button>' +
+
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Attendance</h4>' +
+    '<div class="mb-2 space-y-1">' + attendanceHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<select id="prog-attendance-participant" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' + participantOptions + '</select>' +
+    '<select id="prog-attendance-status" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' +
+    ['Present', 'Absent', 'Excused'].map(function(o) { return '<option value="' + o + '">' + o + '</option>'; }).join('') +
+    '</select>' +
+    '<input id="prog-attendance-date" type="date" value="' + esc(todayStr()) + '" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="add-attendance" data-program-id="' + esc(program.id) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#2A6B9B] hover:bg-[#1B4A6B] mb-4">Record Attendance</button>' +
+
+    '<h4 class="text-xs font-semibold mb-2" style="color:#2B2B2B">Assessment</h4>' +
+    '<div class="mb-2 space-y-1">' + assessmentHtml + '</div>' +
+    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+    '<select id="prog-assessment-participant" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs">' + participantOptions + '</select>' +
+    '<input id="prog-assessment-result" type="text" placeholder="Result" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '<input id="prog-assessment-remarks" type="text" placeholder="Remarks (optional)" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+    '</div>' +
+    '<button data-action="add-assessment" data-program-id="' + esc(program.id) + '" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">Record Assessment</button>' +
+    '</div>';
+}
+
+async function addProgramParticipant(programId) {
+  var ms = getModuleState('programs');
+  var studentId = (document.getElementById('prog-student-id') || {}).value || '';
+  var studentName = (document.getElementById('prog-student-name') || {}).value || '';
+  if (!studentName.trim()) {
+    showToast('Please enter the student name.', 'error');
+    return;
+  }
+  try {
+    await API.create('participants', {
+      programId: programId,
+      studentId: studentId.trim(),
+      studentName: studentName.trim(),
+      eligibility: (document.getElementById('prog-eligibility') || {}).value || '',
+      status: 'Registered',
+    });
+    ms.allParticipants = undefined;
+    showToast('Participant added.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to add participant.', 'error');
+  }
+}
+
+async function addProgramAttendance(programId) {
+  var ms = getModuleState('programs');
+  var participantId = (document.getElementById('prog-attendance-participant') || {}).value || '';
+  if (!participantId) {
+    showToast('Please select a participant.', 'error');
+    return;
+  }
+  try {
+    await API.create('attendance', {
+      programId: programId,
+      participantId: participantId,
+      attendanceDate: (document.getElementById('prog-attendance-date') || {}).value || todayStr(),
+      status: (document.getElementById('prog-attendance-status') || {}).value || 'Present',
+    });
+    ms.allAttendance = undefined;
+    showToast('Attendance recorded.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to record attendance.', 'error');
+  }
+}
+
+async function addProgramAssessment(programId) {
+  var ms = getModuleState('programs');
+  var participantId = (document.getElementById('prog-assessment-participant') || {}).value || '';
+  var result = (document.getElementById('prog-assessment-result') || {}).value || '';
+  if (!participantId || !result.trim()) {
+    showToast('Please select a participant and enter a result.', 'error');
+    return;
+  }
+  try {
+    await API.create('assessment', {
+      programId: programId,
+      participantId: participantId,
+      result: result.trim(),
+      remarks: (document.getElementById('prog-assessment-remarks') || {}).value || '',
+      assessedBy: (state.currentUser && state.currentUser.fullName) || '',
+    });
+    ms.allAssessments = undefined;
+    showToast('Assessment recorded.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to record assessment.', 'error');
+  }
+}
+
+/* ============================== DOCTOR SCHEDULE ============================== */
+function renderDoctorScheduleModal() {
+  var dm = state.doctorScheduleModal || {};
+  var list = dm.list || [];
+  var body = '';
+
+  if (dm.list === null) {
+    body = renderLoader('Loading schedule…', 32);
+  } else {
+    body += '<div class="mb-4 max-h-64 overflow-y-auto">' +
+      (list.length
+        ? list.map(function(s) {
+            return '<div class="flex items-center justify-between p-2 rounded-lg mb-1" style="background:#FDF6F8">' +
+              '<span class="text-xs" style="color:#2B2B2B">' + esc(s.doctorId) + ' &middot; ' + esc(s.date) + ' &middot; ' + esc(s.availableTime) + '</span>' +
+              '<span class="flex items-center gap-2">' +
+              '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:' + (s.status === 'Available' ? '#F0ECF2;color:#2A8B4A' : '#FDF6F8;color:#C13030') + '">' + esc(s.status) + '</span>' +
+              '<button data-action="delete-doctor-schedule" data-schedule-id="' + esc(s.id) + '" style="color:#7A7A7A">' + icon('trash-2', 13) + '</button>' +
+              '</span></div>';
+          }).join('')
+        : '<p class="text-xs" style="color:#7A7A7A">No availability declared yet. Appointments can still be booked freely for doctors with no schedule on file.</p>') +
+      '</div>' +
+      '<div class="grid grid-cols-2 gap-2 mb-2">' +
+      '<input id="ds-doctor-id" type="text" placeholder="Doctor ID or name" class="col-span-2 rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+      '<input id="ds-date" type="date" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+      '<input id="ds-time" type="time" class="rounded-lg border border-[#E8D4DB] px-2 py-1.5 text-xs" />' +
+      '</div>' +
+      '<button data-action="add-doctor-schedule" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">Add Available Slot</button>';
+  }
+
+  return renderModal('Doctor Availability Schedule', body, false);
+}
+
+async function openDoctorScheduleModal() {
+  state.doctorScheduleModal = { open: true, list: null };
+  render();
+  try {
+    var list = await API.list('doctorSchedule');
+    state.doctorScheduleModal.list = list || [];
+    render();
+  } catch (e) {
+    state.doctorScheduleModal.list = [];
+    render();
+  }
+}
+
+async function addDoctorScheduleSlot() {
+  var doctorId = ((document.getElementById('ds-doctor-id') || {}).value || '').trim();
+  var date = (document.getElementById('ds-date') || {}).value || '';
+  var time = (document.getElementById('ds-time') || {}).value || '';
+  if (!doctorId || !date || !time) {
+    showToast('Doctor, date, and time are all required.', 'error');
+    return;
+  }
+  try {
+    await API.create('doctorSchedule', { doctorId: doctorId, date: date, availableTime: time, status: 'Available' });
+    showToast('Availability added.', 'success');
+    openDoctorScheduleModal();
+  } catch (e) {
+    showToast(e.message || 'Failed to add availability.', 'error');
+  }
+}
+
+async function deleteDoctorScheduleSlot(id) {
+  try {
+    await API.delete('doctorSchedule', id);
+    showToast('Availability removed.', 'success');
+    openDoctorScheduleModal();
+  } catch (e) {
+    showToast(e.message || 'Failed to remove availability.', 'error');
+  }
+}
+
+/* ============================== ROLES & PERMISSIONS (admin only) ============================== */
+// Falls back to the 4 clinical-staff role names only if /api/roles hasn't
+// loaded yet (matrix reached before the Users page's lazy fetch resolved) —
+// state.allRoles (from /api/roles) is the authoritative source once loaded.
+function getMatrixRoleNames() {
+  if (state.allRoles && state.allRoles.length) {
+    return state.allRoles.filter(function(r) { return !r.isSelfService; }).map(function(r) { return r.name; });
+  }
+  return ['Clinic Administrator', 'School Nurse', 'Physician', 'Staff Encoder'];
+}
+
+function renderRolesPermissionsModule() {
+  var ms = getModuleState('rolePermissions');
+  if (typeof state.allRoles === 'undefined') {
+    state.allRoles = null;
+    API.list('roles').then(function(list) {
+      state.allRoles = list || [];
+      renderMainContent();
+    }).catch(function() { state.allRoles = []; });
+  }
+  if (typeof ms.permissions === 'undefined') {
+    ms.permissions = null;
+    Promise.all([API.list('permissions'), API.list('rolePermissions')]).then(function(results) {
+      ms.permissions = results[0] || [];
+      ms.grants = results[1] || [];
+      renderMainContent();
+    }).catch(function() {
+      ms.permissions = [];
+      ms.grants = [];
+      renderMainContent();
+    });
+  }
+  var ROLE_NAMES = getMatrixRoleNames();
+
+  var html = '<div>' +
+    '<div class="mb-6 flex items-center gap-3">' +
+    '<button data-nav="users" class="rounded-full p-2 hover:bg-[#FDF6F8]" style="color:#5A4A62">' + icon('arrow-left', 18) + '</button>' +
+    '<div><h2 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Roles &amp; Permissions</h2>' +
+    '<p class="text-xs" style="color:#5A4A62">Toggle which permissions each role is granted</p></div>' +
+    '</div>';
+
+  if (ms.permissions === null) {
+    html += renderLoader('Loading permissions…', 32);
+  } else {
+    html += '<div class="overflow-hidden rounded-2xl border shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
+      '<div class="overflow-x-auto"><table class="w-full text-left text-sm">' +
+      '<thead><tr class="border-b text-xs uppercase tracking-wide" style="border-color:#E8D4DB;background:#FDF6F8;color:#7A1F3D">' +
+      '<th class="px-4 py-3 font-medium">Permission</th>' +
+      ROLE_NAMES.map(function(r) { return '<th class="px-4 py-3 font-medium text-center">' + esc(r) + '</th>'; }).join('') +
+      '</tr></thead><tbody>';
+
+    ms.permissions.forEach(function(p) {
+      var permLabel = p.action ? p.module + ':' + p.action : p.module;
+      html += '<tr class="border-b last:border-0" style="border-color:#E8D4DB">' +
+        '<td class="px-4 py-3"><p class="text-xs" style="color:#2B2B2B">' + esc(p.description || permLabel) + '</p>' +
+        '<p class="text-[10px] font-mono-data" style="color:#7A7A7A">' + esc(permLabel) + '</p></td>' +
+        ROLE_NAMES.map(function(role) {
+          var grant = ms.grants.find(function(g) { return g.role === role && g.permissionId === p.id; });
+          return '<td class="px-4 py-3 text-center"><input type="checkbox" data-action="toggle-grant" data-role="' + esc(role) + '" data-permission-id="' + esc(p.id) + '" data-grant-id="' + esc(grant ? grant.id : '') + '"' + (grant ? ' checked' : '') + ' /></td>';
+        }).join('') +
+        '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+async function toggleRoleGrant(role, permissionId, grantId, wantChecked) {
+  var ms = getModuleState('rolePermissions');
+  try {
+    if (wantChecked) {
+      await API.create('rolePermissions', { role: role, permissionId: permissionId });
+    } else if (grantId) {
+      await API.delete('rolePermissions', grantId);
+    }
+    ms.permissions = undefined;
+    showToast('Permission updated.', 'success');
+    renderMainContent();
+  } catch (e) {
+    showToast(e.message || 'Failed to update permission.', 'error');
+    renderMainContent();
+  }
+}
+
+/* ============================== CERTIFICATE QR VERIFICATION ============================== */
+function renderCertificateQrSection(cert) {
+  if (!cert.qrCode) {
+    return '<div class="px-6 pb-4 border-t pt-4" style="border-color:#E8D4DB">' +
+      '<p class="text-xs" style="color:#7A7A7A">No verification code on file for this certificate yet — re-save it to generate one.</p></div>';
+  }
+  return '<div class="px-6 pb-4 border-t pt-4 flex flex-col items-center" style="border-color:#E8D4DB">' +
+    '<h4 class="text-xs font-semibold mb-2 self-start" style="color:#2B2B2B">Verification QR Code</h4>' +
+    '<div id="cert-qr-canvas" data-qr-code="' + esc(cert.qrCode) + '"></div>' +
+    '<p class="text-[10px] mt-2" style="color:#7A7A7A">Scan to verify this certificate\'s authenticity and status</p>' +
+    '</div>';
+}
+
+function renderCertificateQrIfNeeded() {
+  var container = document.getElementById('cert-qr-canvas');
+  if (!container || typeof QRCode === 'undefined') return;
+  var code = container.getAttribute('data-qr-code');
+  if (!code) return;
+  var verifyUrl = new URL('backend/index.php', window.location.href).href + '?route=' + encodeURIComponent('verifyCertificate') + '&code=' + encodeURIComponent(code);
+  container.innerHTML = '';
+  new QRCode(container, { text: verifyUrl, width: 140, height: 140 });
+}
+
+/* ============================== BACKUP & RESTORE (admin only) ============================== */
+async function downloadBackup() {
+  try {
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('backup'), {
+      headers: { Authorization: 'Bearer ' + API.getToken() },
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      throw new Error(err.error || 'Backup request failed.');
+    }
+    var blob = await res.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'clinic_backup_' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded.', 'success');
+  } catch (e) {
+    showToast(e.message || 'Failed to download backup.', 'error');
+  }
+}
+
+function triggerRestoreFilePicker() {
+  var input = document.getElementById('restore-file-input');
+  if (input) input.click();
+}
+
+async function handleRestoreFileSelected(e) {
+  var file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+
+  if (!confirm('This will PERMANENTLY REPLACE all current data with the contents of "' + file.name + '". This cannot be undone. Continue?')) {
+    return;
+  }
+
+  try {
+    var text = await file.text();
+    var parsed = JSON.parse(text);
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('restore'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API.getToken() },
+      body: JSON.stringify(parsed),
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      throw new Error(err.error || 'Restore failed.');
+    }
+    showToast('Restore complete. Reloading…', 'success');
+    setTimeout(function() { window.location.reload(); }, 1200);
+  } catch (e) {
+    showToast(e.message || 'Failed to restore backup.', 'error');
+  }
+}
+
+/* ============================== ACCOUNT SECURITY (2FA self-service) ============================== */
+function renderSecurityModal() {
+  var sm = state.securityModal || {};
+  var enabled = state.currentUser && state.currentUser.twoFactorEnabled;
+  var body = '';
+
+  if (enabled) {
+    body = '<p class="text-xs mb-4" style="color:#5A4A62">Two-factor authentication is <strong style="color:#2A8B4A">enabled</strong> on your account.</p>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Enter a current code from your app to disable</label>' +
+      '<input id="security-code" type="text" inputmode="numeric" maxlength="6" class="w-full rounded-lg border border-[#E8D4DB] py-2 px-3 text-center text-lg tracking-[0.3em] mb-3" placeholder="000000" />' +
+      (sm.error ? '<div class="mb-3 rounded-lg px-3 py-2 text-xs" style="background:#FDF6F8;color:#C13030">' + esc(sm.error) + '</div>' : '') +
+      '<button data-action="disable-2fa" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white" style="background:#C13030">Disable Two-Factor Authentication</button>';
+  } else if (sm.secret) {
+    body = '<p class="text-xs mb-3" style="color:#5A4A62">Scan this with Google Authenticator, Authy, or a similar app, then enter the 6-digit code it shows.</p>' +
+      '<div id="security-qr-canvas" data-qr-code="' + esc(sm.otpauthUrl) + '" class="flex justify-center mb-3"></div>' +
+      '<p class="text-center text-[10px] font-mono-data mb-3" style="color:#7A7A7A">' + esc(sm.secret) + '</p>' +
+      '<input id="security-code" type="text" inputmode="numeric" maxlength="6" class="w-full rounded-lg border border-[#E8D4DB] py-2 px-3 text-center text-lg tracking-[0.3em] mb-3" placeholder="000000" />' +
+      (sm.error ? '<div class="mb-3 rounded-lg px-3 py-2 text-xs" style="background:#FDF6F8;color:#C13030">' + esc(sm.error) + '</div>' : '') +
+      '<button data-action="confirm-2fa" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white" style="background:#2A8B4A">Confirm and Enable</button>';
+  } else {
+    body = '<p class="text-xs mb-4" style="color:#5A4A62">Two-factor authentication adds an extra layer of protection using an authenticator app on your phone.</p>' +
+      '<button data-action="start-2fa-setup" class="w-full rounded-lg px-3 py-2 text-xs font-medium text-white" style="background:#7B1028">Set Up Two-Factor Authentication</button>';
+  }
+
+  return renderModal('Account Security', body, false);
+}
+
+function renderSecurityQrIfNeeded() {
+  var container = document.getElementById('security-qr-canvas');
+  if (!container || typeof QRCode === 'undefined') return;
+  var value = container.getAttribute('data-qr-code');
+  if (!value) return;
+  container.innerHTML = '';
+  new QRCode(container, { text: value, width: 160, height: 160 });
+}
+
+async function startTwoFactorSetup() {
+  try {
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('2fa/setup'), {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + API.getToken() },
+    });
+    var result = await res.json();
+    if (!res.ok || !result.ok) throw new Error(result.message || 'Failed to start setup.');
+    state.securityModal = { open: true, secret: result.secret, otpauthUrl: result.otpauthUrl };
+    render();
+  } catch (e) {
+    showToast(e.message || 'Failed to start 2FA setup.', 'error');
+  }
+}
+
+async function confirmTwoFactorSetup() {
+  var codeEl = document.getElementById('security-code');
+  var code = (codeEl ? codeEl.value : '').trim();
+  try {
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('2fa/confirm'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API.getToken() },
+      body: JSON.stringify({ code: code }),
+    });
+    var result = await res.json();
+    if (!result.ok) {
+      state.securityModal.error = result.message || 'Invalid code.';
+      render();
+      return;
+    }
+    state.currentUser.twoFactorEnabled = true;
+    var session = API.getSession() || {};
+    session.twoFactorEnabled = true;
+    API.setSession(session);
+    state.securityModal = null;
+    showToast('Two-factor authentication enabled.', 'success');
+    render();
+  } catch (e) {
+    showToast(e.message || 'Failed to confirm 2FA.', 'error');
+  }
+}
+
+async function disableTwoFactor() {
+  var codeEl = document.getElementById('security-code');
+  var code = (codeEl ? codeEl.value : '').trim();
+  try {
+    var base = API.getBaseUrl();
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    var res = await fetch(base + sep + 'route=' + encodeURIComponent('2fa/disable'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API.getToken() },
+      body: JSON.stringify({ code: code }),
+    });
+    var result = await res.json();
+    if (!result.ok) {
+      state.securityModal.error = result.message || 'Invalid code.';
+      render();
+      return;
+    }
+    state.currentUser.twoFactorEnabled = false;
+    var session2 = API.getSession() || {};
+    session2.twoFactorEnabled = false;
+    API.setSession(session2);
+    state.securityModal = null;
+    showToast('Two-factor authentication disabled.', 'success');
+    render();
+  } catch (e) {
+    showToast(e.message || 'Failed to disable 2FA.', 'error');
+  }
+}
+
 /* ============================== CRUD MODULE ============================== */
 function renderCrudModule(key) {
   var config = MODULES[key];
   if (!config) return '<div style="color:#5A4A62">Module not found</div>';
   var ms = getModuleState(key);
+
+  if (key === 'users' && typeof state.allRoles === 'undefined') {
+    state.allRoles = null;
+    API.list('roles').then(function(list) {
+      state.allRoles = list || [];
+      if (state.allRoles.length) {
+        var roleField = USER_FIELDS.find(function(f) { return f.name === 'role'; });
+        if (roleField) roleField.options = state.allRoles.map(function(r) { return r.name; });
+      }
+      renderMainContent();
+    }).catch(function() { state.allRoles = []; });
+  }
+
+  if (['visits', 'appointments', 'clearance'].indexOf(key) !== -1) {
+    lazyLoadPatientLinkLists(ms);
+  }
+
   var dispensable = key === 'medicine';
-  var columns = config.fields.filter(function(f) { return f.type !== 'textarea' && !f.hideInTable; }).slice(0, 6);
+  var columns = config.fields.filter(function(f) { return f.type !== 'textarea' && f.type !== 'hidden' && !f.hideInTable; }).slice(0, 6);
   var isStatusLike = function(name) { return ['status', 'severity', 'yearLevel', 'role'].indexOf(name) !== -1; };
 
   var html = '<div data-module="' + key + '">';
@@ -1835,6 +2916,13 @@ function renderCrudModule(key) {
     icon('search', 15, 'absolute left-3 top-1/2 -translate-y-1/2 text-[#5A4A62]') +
     '<input data-search="' + key + '" type="text" value="' + esc(ms.search) + '" placeholder="Search records..." class="w-56 rounded-lg border border-[#E8D4DB] py-2 pl-9 pr-3 text-sm text-[#2B2B2B] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30" />' +
     '</div>' +
+    (key === 'users' && state.currentUser && state.currentUser.role === 'Clinic Administrator' ? '<button data-nav="rolePermissions" class="flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' +
+    icon('shield', 16) + ' Roles & Permissions</button>' +
+    '<button data-action="download-backup" class="flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' +
+    icon('download', 16) + ' Backup</button>' +
+    '<button data-action="restore-backup" class="flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#C13030">' +
+    icon('upload', 16) + ' Restore</button>' +
+    '<input type="file" id="restore-file-input" accept=".json" class="hidden">' : '') +
     (key !== 'students' && key !== 'medicalHistory' ? '<button data-action="add" data-module="' + key + '" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white ' + BTN_COLOR_MAP[config.color] + '">' +
     icon('plus', 16) + ' Add New</button>' : '') +
     '</div></div>';
@@ -2131,9 +3219,11 @@ function renderCrudModule(key) {
     if (ms.error) {
       modalContent += '<div class="mb-4 rounded-lg px-3 py-2 text-sm" style="background:#FDF6F8;color:#C13030">' + esc(ms.error) + '</div>';
     }
+    modalContent += renderPatientLinkSelector(key, ms);
     modalContent += '<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">';
     config.fields.forEach(function(f) {
       if (f.hideInForm) return; // Skip fields that should be hidden in form
+      if (f.type === 'hidden') { modalContent += renderFieldInput(f, ms.form[f.name], key + '_' + f.name); return; }
       modalContent += '<div class="' + (f.type === 'textarea' ? 'sm:col-span-2' : '') + '">' +
         '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">' + esc(f.label) + (f.required ? '<span style="color:#C13030"> *</span>' : '') + '</label>' +
         renderFieldInput(f, ms.form[f.name], key + '_' + f.name) +
@@ -2256,6 +3346,51 @@ function renderCrudModule(key) {
   if (ms.viewTarget) {
     var v = ms.items.find(function(i) { return i.id === ms.viewTarget; });
     if (v) {
+      var isIncident = key === 'incidents';
+      if (isIncident && typeof ms.allTreatments === 'undefined') {
+        ms.allTreatments = null;
+        API.list('emergencyTreatment').then(function(list) {
+          ms.allTreatments = list || [];
+          renderMainContent();
+        }).catch(function() { ms.allTreatments = []; renderMainContent(); });
+      }
+      var isStaff = key === 'staff';
+      if (isStaff && typeof ms.allEmployeeRecords === 'undefined') {
+        ms.allEmployeeRecords = null;
+        API.list('employeeMedicalRecord').then(function(list) {
+          ms.allEmployeeRecords = list || [];
+          renderMainContent();
+        }).catch(function() { ms.allEmployeeRecords = []; renderMainContent(); });
+      }
+      if (isStaff && typeof ms.allEmployeeVisits === 'undefined') {
+        ms.allEmployeeVisits = null;
+        Promise.all([API.list('employeeVisit'), API.list('employeeMedicine'), API.list('medicine')]).then(function(results) {
+          ms.allEmployeeVisits = results[0] || [];
+          ms.allEmployeeMedicine = results[1] || [];
+          ms.allMedicines = results[2] || [];
+          renderMainContent();
+        }).catch(function() {
+          ms.allEmployeeVisits = [];
+          ms.allEmployeeMedicine = [];
+          ms.allMedicines = [];
+          renderMainContent();
+        });
+      }
+      var isProgram = key === 'programs';
+      if (isProgram && typeof ms.allParticipants === 'undefined') {
+        ms.allParticipants = null;
+        Promise.all([API.list('participants'), API.list('attendance'), API.list('assessment')]).then(function(results) {
+          ms.allParticipants = results[0] || [];
+          ms.allAttendance = results[1] || [];
+          ms.allAssessments = results[2] || [];
+          renderMainContent();
+        }).catch(function() {
+          ms.allParticipants = [];
+          ms.allAttendance = [];
+          ms.allAssessments = [];
+          renderMainContent();
+        });
+      }
       html += '<div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">' +
         '<div class="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">' +
         '<div class="flex items-center justify-between border-b px-6 py-4" style="border-color:#E8D4DB">' +
@@ -2263,7 +3398,7 @@ function renderCrudModule(key) {
         '<button data-view-close class="rounded-full p-1 hover:bg-[#FDF6F8]" style="color:#5A4A62">' + icon('x', 18) + '</button>' +
         '</div>' +
         '<div class="p-6 space-y-2">' +
-        config.fields.filter(function(f) { return !f.hideInTable; }).map(function(f) {
+        config.fields.filter(function(f) { return f.type !== 'hidden' && !f.hideInTable; }).map(function(f) {
           var val = v[f.name];
           if (f.type === 'date') val = fmtDate(val);
           return '<div class="flex justify-between p-2 rounded-lg" style="background:#FDF6F8">' +
@@ -2272,6 +3407,11 @@ function renderCrudModule(key) {
             '</div>';
         }).join('') +
         '</div>' +
+        (isIncident ? renderEmergencyTreatmentSection(v, ms) : '') +
+        (isStaff ? renderEmployeeHealthSection(v, ms) : '') +
+        (isStaff ? renderEmployeeVisitMedicineSection(v, ms) : '') +
+        (isProgram ? renderProgramMonitoringSection(v, ms) : '') +
+        (key === 'clearance' ? renderCertificateQrSection(v) : '') +
         '<div class="px-6 pb-6"><button data-view-close class="w-full py-2 rounded-lg text-xs" style="background:#FFFFFF;color:#5A4A62;border:1px solid #E8D4DB">Close</button></div>' +
         '</div></div>';
     }
@@ -2300,6 +3440,10 @@ function render() {
     root.innerHTML = renderLoggedOutScreen();
     return;
   }
+  if (state.pendingTwoFactor) {
+    root.innerHTML = renderTwoFactorScreen();
+    return;
+  }
   if (!state.currentUser) {
     root.innerHTML = renderLoginScreen();
     return;
@@ -2316,6 +3460,12 @@ function render() {
     mainContent = renderReports();
   } else if (state.currentView === 'medicalRecords') {
     mainContent = renderMedicalRecordsModule();
+  } else if (state.currentView === 'visits') {
+    mainContent = renderVisitsModule();
+  } else if (state.currentView === 'appointments') {
+    mainContent = renderAppointmentsModule();
+  } else if (state.currentView === 'rolePermissions') {
+    mainContent = renderRolesPermissionsModule();
   } else if (MODULES[state.currentView]) {
     mainContent = renderCrudModule(state.currentView);
   } else {
@@ -2331,9 +3481,12 @@ function render() {
     '<main class="flex-1 p-5">' + mainContent + '</main>' +
     '</div>' +
     renderMobileNav() +
-    (state.showLogoutConfirm ? renderConfirmDialog('Confirm Logout', 'Are you sure you want to log out of the system?', 'Log Out', true) : '');
+    (state.showLogoutConfirm ? renderConfirmDialog('Confirm Logout', 'Are you sure you want to log out of the system?', 'Log Out', true) : '') +
+    (state.securityModal && state.securityModal.open ? renderSecurityModal() : '');
 
   lucide.createIcons();
+  renderCertificateQrIfNeeded();
+  renderSecurityQrIfNeeded();
 
   /* Initialize chart if on dashboard */
   if (state.currentView === 'dashboard' && !state.loadingData && state.dashData) {
@@ -2513,6 +3666,147 @@ function setupEvents() {
     if (target) {
       e.preventDefault();
       closeModalForCurrentView();
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-treatment"]');
+    if (target) {
+      e.preventDefault();
+      addEmergencyTreatment(target.getAttribute('data-incident-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="save-employee-record"]');
+    if (target) {
+      e.preventDefault();
+      saveEmployeeMedicalRecord(target.getAttribute('data-staff-id'), target.getAttribute('data-record-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="open-doctor-schedule"]');
+    if (target) {
+      e.preventDefault();
+      openDoctorScheduleModal();
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-doctor-schedule"]');
+    if (target) {
+      e.preventDefault();
+      addDoctorScheduleSlot();
+      return;
+    }
+
+    target = e.target.closest('[data-action="delete-doctor-schedule"]');
+    if (target) {
+      e.preventDefault();
+      deleteDoctorScheduleSlot(target.getAttribute('data-schedule-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="open-security-modal"]');
+    if (target) {
+      e.preventDefault();
+      state.securityModal = { open: true };
+      render();
+      return;
+    }
+
+    target = e.target.closest('[data-action="start-2fa-setup"]');
+    if (target) {
+      e.preventDefault();
+      startTwoFactorSetup();
+      return;
+    }
+
+    target = e.target.closest('[data-action="confirm-2fa"]');
+    if (target) {
+      e.preventDefault();
+      confirmTwoFactorSetup();
+      return;
+    }
+
+    target = e.target.closest('[data-action="disable-2fa"]');
+    if (target) {
+      e.preventDefault();
+      disableTwoFactor();
+      return;
+    }
+
+    target = e.target.closest('#twofactor-cancel');
+    if (target) {
+      e.preventDefault();
+      state.pendingTwoFactor = null;
+      render();
+      return;
+    }
+
+    target = e.target.closest('[data-action="download-backup"]');
+    if (target) {
+      e.preventDefault();
+      downloadBackup();
+      return;
+    }
+
+    target = e.target.closest('[data-action="restore-backup"]');
+    if (target) {
+      e.preventDefault();
+      triggerRestoreFilePicker();
+      return;
+    }
+
+    target = e.target.closest('[data-action="toggle-grant"]');
+    if (target) {
+      toggleRoleGrant(target.getAttribute('data-role'), target.getAttribute('data-permission-id'), target.getAttribute('data-grant-id'), target.checked);
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-employee-visit"]');
+    if (target) {
+      e.preventDefault();
+      addEmployeeVisit(target.getAttribute('data-staff-id'), target.getAttribute('data-staff-name'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-employee-medicine"]');
+    if (target) {
+      e.preventDefault();
+      addEmployeeMedicine(target.getAttribute('data-staff-id'), target.getAttribute('data-staff-name'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="dispense-from-visit"]');
+    if (target) {
+      e.preventDefault();
+      dispenseFromVisit(target.getAttribute('data-visit-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="ai-analyze-visit"]');
+    if (target) {
+      e.preventDefault();
+      analyzeVisitAi(target.getAttribute('data-visit-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-participant"]');
+    if (target) {
+      e.preventDefault();
+      addProgramParticipant(target.getAttribute('data-program-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-attendance"]');
+    if (target) {
+      e.preventDefault();
+      addProgramAttendance(target.getAttribute('data-program-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="add-assessment"]');
+    if (target) {
+      e.preventDefault();
+      addProgramAssessment(target.getAttribute('data-program-id'));
       return;
     }
 
@@ -2819,7 +4113,18 @@ function setupEvents() {
       var key = target.getAttribute('data-export');
       var filename = target.getAttribute('data-filename');
       var data = state.reportsData.records[key] || [];
+      if (key === 'auditTrail' || key === 'loginAttempts') {
+        data = filterAuditRows(data, state.auditFilter || {});
+      }
       exportCSV(filename, data);
+      return;
+    }
+
+    target = e.target.closest('[data-action="clear-audit-filter"]');
+    if (target) {
+      e.preventDefault();
+      state.auditFilter = { user: '', resource: '', dateFrom: '', dateTo: '' };
+      renderMainContent();
       return;
     }
 
@@ -3047,6 +4352,10 @@ function setupEvents() {
       e.preventDefault();
       handleLoginSubmit();
     }
+    if (form.id === 'twofactor-form') {
+      e.preventDefault();
+      handleTwoFactorSubmit();
+    }
     var saveKey = form.getAttribute('data-save-form');
     if (saveKey) {
       e.preventDefault();
@@ -3068,6 +4377,12 @@ function setupEvents() {
     if (groupsKey) {
       var ms2 = getModuleState(groupsKey);
       ms2.groupSelected = target.value;
+      renderMainContent();
+      return;
+    }
+    if (target.id === 'audit-filter-user') {
+      state.auditFilter = state.auditFilter || {};
+      state.auditFilter.user = target.value;
       renderMainContent();
       return;
     }
@@ -3096,7 +4411,37 @@ function setupEvents() {
   /* Filter change events */
   document.addEventListener('change', function(e) {
     var target = e.target;
-    
+
+    if (target.matches('[data-patient-select]')) {
+      var linkKey = target.getAttribute('data-patient-select');
+      var linkMs = getModuleState(linkKey);
+      var nameKey = linkKey === 'clearance' ? 'name' : 'patientName';
+      var typeKey = linkKey === 'clearance' ? 'personType' : 'patientType';
+      var val = target.value;
+      if (val) {
+        var parts = val.split(':');
+        var kind = parts[0], id = parts[1];
+        var selectedName = target.options[target.selectedIndex].getAttribute('data-name');
+        linkMs.form[nameKey] = selectedName;
+        linkMs.form[typeKey] = kind === 'student' ? 'Student' : 'Faculty/Staff';
+        linkMs.form.studentId = kind === 'student' ? id : '';
+        linkMs.form.staffId = kind === 'staff' ? id : '';
+      } else {
+        linkMs.form.studentId = '';
+        linkMs.form.staffId = '';
+      }
+      renderMainContent();
+      return;
+    }
+
+    if (target.id === 'audit-filter-resource' || target.id === 'audit-filter-from' || target.id === 'audit-filter-to') {
+      state.auditFilter = state.auditFilter || {};
+      var field = target.id === 'audit-filter-resource' ? 'resource' : (target.id === 'audit-filter-from' ? 'dateFrom' : 'dateTo');
+      state.auditFilter[field] = target.value;
+      renderMainContent();
+      return;
+    }
+
     /* Clear date filter button */
     if (target.matches('[data-clear-date-filter]')) {
       var moduleKey = target.getAttribute('data-clear-date-filter');
@@ -3238,6 +4583,15 @@ function renderMainContent() {
   } else if (state.currentView === 'medicalRecords') {
     mainContent = renderMedicalRecordsModule();
     mainEl.innerHTML = mainContent;
+  } else if (state.currentView === 'visits') {
+    mainContent = renderVisitsModule();
+    mainEl.innerHTML = mainContent;
+  } else if (state.currentView === 'appointments') {
+    mainContent = renderAppointmentsModule();
+    mainEl.innerHTML = mainContent;
+  } else if (state.currentView === 'rolePermissions') {
+    mainContent = renderRolesPermissionsModule();
+    mainEl.innerHTML = mainContent;
   } else if (MODULES[state.currentView]) {
     mainContent = renderCrudModule(state.currentView);
     mainEl.innerHTML = mainContent;
@@ -3248,6 +4602,7 @@ function renderMainContent() {
   mainContent = mainContent || '<div class="p-5 text-sm" style="color:#5A4A62">Unable to load the <strong>' + esc(state.currentView || 'unknown') + '</strong> view. Please select another module.</div>';
   mainEl.innerHTML = mainContent;
   lucide.createIcons();
+  renderCertificateQrIfNeeded();
 
   // Add input event listeners for enrollment modal
   if (state.currentView === 'students') {
@@ -3268,6 +4623,14 @@ function renderMainContent() {
     }
   }
 
+  // Add file input listener for backup restore
+  if (state.currentView === 'users') {
+    var restoreFileInput = document.getElementById('restore-file-input');
+    if (restoreFileInput) {
+      restoreFileInput.addEventListener('change', handleRestoreFileSelected);
+    }
+  }
+
   // Add file input listener for visits import
   if (state.currentView === 'visits') {
     var visitsFileInput = document.getElementById('import-visits-file-input');
@@ -3278,6 +4641,16 @@ function renderMainContent() {
 }
 
 function closeModalForCurrentView() {
+  if (state.securityModal) {
+    state.securityModal = null;
+    render();
+    return;
+  }
+  if (state.doctorScheduleModal) {
+    state.doctorScheduleModal = null;
+    render();
+    return;
+  }
   if (MODULES[state.currentView]) {
     var ms = getModuleState(state.currentView);
     ms.modalOpen = false;
@@ -3404,6 +4777,34 @@ function triggerImportStudents() {
   }
 }
 
+// Splits one CSV line into fields, honoring double-quoted fields (which may
+// contain commas) and "" as an escaped quote inside a quoted field.
+function parseCsvLine(line) {
+  var values = [];
+  var current = '';
+  var inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        current += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      values.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  values.push(current);
+  return values;
+}
+
 function handleImportStudents(event) {
   var file = event.target.files[0];
   if (!file) return;
@@ -3412,12 +4813,12 @@ function handleImportStudents(event) {
   reader.onload = async function(e) {
     var data = e.target.result;
     var rows = data.split('\n');
-    var headers = rows[0].split(',').map(function(h) { return h.trim(); });
+    var headers = parseCsvLine(rows[0]).map(function(h) { return h.trim(); });
     var students = [];
 
     for (var i = 1; i < rows.length; i++) {
       if (rows[i].trim() === '') continue;
-      var values = rows[i].split(',');
+      var values = parseCsvLine(rows[i]);
       var student = {};
       headers.forEach(function(header, index) {
         student[header] = values[index] ? values[index].trim() : '';
@@ -3516,12 +4917,12 @@ function handleImportVisits(event) {
   reader.onload = async function(e) {
     var data = e.target.result;
     var rows = data.split('\n');
-    var headers = rows[0].split(',').map(function(h) { return h.trim(); });
+    var headers = parseCsvLine(rows[0]).map(function(h) { return h.trim(); });
     var visits = [];
 
     for (var i = 1; i < rows.length; i++) {
       if (rows[i].trim() === '') continue;
-      var values = rows[i].split(',');
+      var values = parseCsvLine(rows[i]);
       var visit = {};
       headers.forEach(function(header, index) {
         visit[header] = values[index] ? values[index].trim() : '';
@@ -3604,8 +5005,13 @@ async function handleLoginSubmit() {
 
   try {
     var result = await API.login(username, password);
+    if (result.needsTwoFactor) {
+      state.pendingTwoFactor = result.tempToken;
+      render();
+      return;
+    }
     API.setToken(result.token);
-    API.setSession({ id: result.user.id, username: result.user.username, fullName: result.user.fullName, role: result.user.role });
+    API.setSession({ id: result.user.id, username: result.user.username, fullName: result.user.fullName, role: result.user.role, twoFactorEnabled: !!result.user.twoFactorEnabled });
     state.currentUser = result.user;
     state.currentView = 'dashboard';
     render();
@@ -3937,17 +5343,12 @@ async function doSave(key) {
     data.historyId = generateHistoryId(ms.items);
   }
 
-  /* Strip fields not yet in the database schema for each module */
-  var EXTRA_FIELDS = {
-    visits: ['grade', 'temperature', 'bloodPressure', 'pulseRate', 'assessment', 'medicineDispensed', 'disposition'],
-  };
-  var skip = EXTRA_FIELDS[key];
-  if (skip) {
-    skip.forEach(function(n) { delete data[n]; });
-  }
-
-  /* Auto-set date/time for visits to current system time */
-  if (key === 'visits') {
+  // Visit date/time are readonly (logged as-it-happens, not user-editable) and
+  // the field's rendered value can go stale if the modal sits open a while — but
+  // only refresh it on create. On edit it must NOT be touched, since the field
+  // already shows that visit's real recorded date/time and clobbering it here
+  // would silently corrupt historical records to today's date on any edit.
+  if (key === 'visits' && !ms.editing) {
     data.date = new Date().toISOString().slice(0, 10);
     data.time = new Date().toTimeString().slice(0, 5);
   }
@@ -4227,14 +5628,9 @@ async function init() {
         fullName: session.fullName || 'User',
         username: session.username || '',
         role: session.role || 'Staff',
+        twoFactorEnabled: !!session.twoFactorEnabled,
       };
       restoreState();
-      Object.keys(MODULES).forEach(function(key) {
-        var ms = getModuleState(key);
-        if (Array.isArray(ms.items) && !ms.items.length) {
-          delete ms.items;
-        }
-      });
       state.authLoading = false;
       render();
       state.dashData = dashData;

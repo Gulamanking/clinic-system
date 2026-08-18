@@ -175,5 +175,9 @@ const API = (function () {
     delete(table, id) {
       return del('/api/' + table + '/' + encodeURIComponent(id));
     },
+
+    analyzeVisit(visitId) {
+      return post('/api/ai/analyze', { visitId: visitId });
+    },
   };
 })();

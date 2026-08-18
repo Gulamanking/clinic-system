@@ -1,0 +1,2 @@
+patientName,patientType,studentId,staffId,date,time,complaint,diagnosis,treatment,temperature,bloodPressure,pulseRate,assessment,medicineDispensed,nurseOnDuty,disposition
+"AI Test Patient","","","","2026-08-18","13:12","headache","tension headache","","","","","","","",""
