@@ -14,6 +14,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/gemini.php';
+require_once __DIR__ . '/insights.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -882,6 +883,18 @@ try {
         jsonResponse(['ok' => true, 'message' => 'Data already exists']);
     } elseif ($path === '/api/ai/analyze') {
         handleAiAnalyze();
+    } elseif ($path === '/api/insights/patient') {
+        requirePermission('use_ai_assistant');
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $studentId = trim((string)($input['studentId'] ?? ''));
+        $patientName = trim((string)($input['patientName'] ?? ''));
+        if ($studentId === '' && $patientName === '') {
+            jsonResponse(['error' => 'studentId or patientName is required'], 400);
+        }
+        jsonResponse(computePatientInsights($studentId, $patientName));
+    } elseif ($path === '/api/insights/trends') {
+        requirePermission('view_reports');
+        jsonResponse(computeClinicTrends());
     } elseif ($path === '/api/medicalRecords/folders') {
         requireAuth();
         switch ($method) {

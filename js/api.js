@@ -179,5 +179,13 @@ const API = (function () {
     analyzeVisit(visitId) {
       return post('/api/ai/analyze', { visitId: visitId });
     },
+
+    getPatientInsights(studentId, patientName) {
+      return post('/api/insights/patient', { studentId: studentId, patientName: patientName });
+    },
+
+    getClinicTrends() {
+      return get('/api/insights/trends');
+    },
   };
 })();

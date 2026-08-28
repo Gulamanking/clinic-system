@@ -13,7 +13,7 @@
 // to create it). Anything set in this file overrides config.php's defaults;
 // config.secret.php overrides both.
 return[
-    'db_driver' => 'mysql',
+    'db_driver' => 'sqlite',
     'db_host' => '127.0.0.1',
     'db_port' => '3306',
     'db_name' => 'clinic_system',

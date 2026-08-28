@@ -14,10 +14,13 @@ $projectRoot = dirname(__DIR__, 2);
 $backendDir = $projectRoot . '/backend';
 $configLocalPath = $backendDir . '/config.local.php';
 $configLocalBackup = $backendDir . '/config.local.php.testbak';
+$configSecretPath = $backendDir . '/config.secret.php';
+$configSecretBackup = $backendDir . '/config.secret.php.testbak';
 $testDbPath = sys_get_temp_dir() . '/clinic_system_test_' . uniqid() . '.sqlite';
 $testPort = 8971;
 
 $movedConfig = false;
+$movedSecret = false;
 $serverProcess = null;
 $serverLogPath = null;
 
@@ -33,11 +36,15 @@ function killServer($proc) {
     proc_close($proc);
 }
 
-register_shutdown_function(function() use (&$movedConfig, $configLocalPath, $configLocalBackup, $testDbPath, &$serverProcess, &$serverLogPath) {
+register_shutdown_function(function() use (&$movedConfig, $configLocalPath, $configLocalBackup, &$movedSecret, $configSecretPath, $configSecretBackup, $testDbPath, &$serverProcess, &$serverLogPath) {
     killServer($serverProcess);
     if ($movedConfig && file_exists($configLocalBackup)) {
         @unlink($configLocalPath);
         rename($configLocalBackup, $configLocalPath);
+    }
+    if ($movedSecret && file_exists($configSecretBackup)) {
+        @unlink($configSecretPath);
+        rename($configSecretBackup, $configSecretPath);
     }
     @unlink($testDbPath);
     if (!empty($serverLogPath)) { @unlink($serverLogPath); }
@@ -57,6 +64,14 @@ try {
         "    'jwt_secret' => 'test-suite-jwt-secret',\n" .
         "    'encryption_key' => 'test-suite-encryption-key-0123456',\n" .
         "];\n");
+
+    // Also hide any real config.secret.php — otherwise a real Gemini key
+    // leaks into the test run, breaking the "not configured" assertion in
+    // 07_ai_assistant.php and burning real API quota on every test run.
+    if (file_exists($configSecretPath)) {
+        rename($configSecretPath, $configSecretBackup);
+        $movedSecret = true;
+    }
 
     // Redirect the server's stdout/stderr to a file, not pipes: php -S logs
     // one line per request, and an unread pipe fills its OS buffer after

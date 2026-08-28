@@ -1087,6 +1087,42 @@ function filterAuditRows(rows, filter) {
   });
 }
 
+function renderClinicTrendsPanel() {
+  if (typeof state.clinicTrends === 'undefined') {
+    state.clinicTrends = null;
+    API.getClinicTrends().then(function(t) {
+      state.clinicTrends = t;
+      renderMainContent();
+    }).catch(function() {
+      state.clinicTrends = false;
+      renderMainContent();
+    });
+  }
+
+  var inner;
+  if (state.clinicTrends === null) {
+    inner = '<p class="text-xs" style="color:#7A7A7A">Scanning recent visits for clinic-wide patterns…</p>';
+  } else if (state.clinicTrends === false) {
+    inner = '<p class="text-xs" style="color:#C13030">Could not load clinic-wide trend detection.</p>';
+  } else {
+    var t = state.clinicTrends;
+    var items = (t.diagnosisTrends || []).map(function(d) {
+      return '<li class="text-xs" style="color:#2B2B2B">&#9888; "' + esc(d.diagnosis) + '" reported by ' + esc(d.studentCount) + ' different students in the last ' + esc(t.windowDays) + ' days.</li>';
+    }).concat((t.categoryTrends || []).map(function(c) {
+      return '<li class="text-xs" style="color:#2B2B2B">&#9888; ' + esc(c.category) + '-related symptoms reported by ' + esc(c.studentCount) + ' different students in the last ' + esc(t.windowDays) + ' days.</li>';
+    }));
+    inner = items.length
+      ? '<ul class="space-y-1">' + items.join('') + '</ul>'
+      : '<p class="text-xs" style="color:#7A7A7A">No clinic-wide spike detected in the last ' + esc(t.windowDays) + ' days.</p>';
+  }
+
+  return '<div class="mb-6 rounded-2xl border p-4 shadow-sm" style="border-color:#E8D4DB;background:#FFFFFF">' +
+    '<p class="text-sm font-semibold mb-1" style="color:#2B2B2B">Clinic-Wide Health Trend Detection</p>' +
+    '<p class="text-[11px] mb-3" style="color:#7A7A7A">Flags a diagnosis or symptom category showing up across multiple students recently &mdash; a review prompt for staff, not an automatic outbreak declaration.</p>' +
+    inner +
+    '</div>';
+}
+
 function renderReports() {
   var html = '<div>' +
     '<div class="mb-6 flex items-center justify-between">' +
@@ -1126,6 +1162,8 @@ function renderReports() {
     '<p class="text-xs" style="color:#5A4A62">Failed / Blocked Logins</p>' +
     '<p class="font-mono-data mt-1 text-2xl font-semibold" style="color:#C13030">' + (summary.failedLogins || 0) + '</p></div>' +
     '</div>';
+
+  html += renderClinicTrendsPanel();
 
   var rows = [
     { section: 'Student Medical Records', label: 'Student Medical Profiles', key: 'students', filename: 'student_medical_records.csv' },
@@ -1502,6 +1540,61 @@ async function analyzeVisitAi(visitId) {
   renderMainContent();
 }
 
+var RISK_LEVEL_COLOR = { Low: '#2A8B4A', Medium: '#C9A24E', High: '#C13030' };
+
+function renderVisitPatternWidget(visit, ms) {
+  var pi = ms.patternInsights && ms.patternInsights.visitId === visit.id ? ms.patternInsights : null;
+
+  var body = '';
+  if (pi && pi.loading) {
+    body = '<p class="text-xs" style="color:#7A7A7A">Scanning patient history…</p>';
+  } else if (pi && pi.error) {
+    body = '<p class="text-xs" style="color:#C13030">' + esc(pi.error) + '</p>';
+  } else if (pi && pi.data) {
+    var d = pi.data;
+    var levelColor = RISK_LEVEL_COLOR[d.riskLevel] || '#7A7A7A';
+    body = '<div class="flex items-center gap-2 mb-2">' +
+      '<span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:' + levelColor + '22;color:' + levelColor + '">' + esc(d.riskLevel) + ' risk &middot; ' + esc(d.riskScore) + '/100</span>' +
+      '<span class="text-[10px]" style="color:#7A7A7A">' + esc(d.recordCount) + ' record(s) on file</span>' +
+      '</div>';
+    if (d.alerts && d.alerts.length) {
+      body += '<ul class="space-y-1 mb-2">' + d.alerts.map(function(a) {
+        return '<li class="text-xs" style="color:#2B2B2B">&#9888; ' + esc(a) + '</li>';
+      }).join('') + '</ul>';
+    } else {
+      body += '<p class="text-xs" style="color:#7A7A7A">No recurring pattern detected in this patient\'s history.</p>';
+    }
+    if (d.riskBreakdown && d.riskBreakdown.length) {
+      body += '<details class="text-[11px]" style="color:#7A7A7A"><summary class="cursor-pointer">Score breakdown</summary>' +
+        d.riskBreakdown.map(function(b) { return '<div>' + esc(b.factor) + ' &mdash; ' + esc(b.detail) + ' (+' + esc(b.points) + ')</div>'; }).join('') +
+        '</details>';
+    }
+    body += '<p class="mt-2 text-[10px]" style="color:#7A7A7A">Pattern detection is a review aid only, not a diagnosis. The attending doctor/nurse makes the clinical decision.</p>';
+  } else {
+    body = '<button data-action="scan-visit-patterns" data-visit-id="' + esc(visit.id) + '" class="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[#2A6B9B] hover:bg-[#1B4B6B]">Scan for Recurring Patterns</button>';
+  }
+
+  return '<div class="mt-4 p-3 rounded-lg border" style="border-color:#E8D4DB">' +
+    '<p class="text-[10px] font-semibold mb-2" style="color:#2B2B2B">Recurring Illness &amp; Risk Check</p>' +
+    body +
+    '</div>';
+}
+
+async function scanVisitPatterns(visitId) {
+  var ms = getModuleState('visits');
+  var visit = ms.items.find(function(i) { return i.id === visitId; });
+  if (!visit) return;
+  ms.patternInsights = { visitId: visitId, loading: true };
+  renderMainContent();
+  try {
+    var data = await API.getPatientInsights(visit.studentId || '', visit.patientName || '');
+    ms.patternInsights = { visitId: visitId, data: data };
+  } catch (e) {
+    ms.patternInsights = { visitId: visitId, error: e.message || 'Pattern scan failed.' };
+  }
+  renderMainContent();
+}
+
 function renderVisitsModule() {
   var key = 'visits';
   var config = MODULES[key];
@@ -1703,6 +1796,7 @@ function renderVisitsModule() {
       '</div>' +
       renderVisitDispenseWidget(vv, ms) +
       renderVisitAiWidget(vv, ms) +
+      renderVisitPatternWidget(vv, ms) +
       '<button data-view-close class="mt-4 w-full py-2 rounded-lg text-xs" style="background:#FFFFFF;color:#5A4A62;border:1px solid #E8D4DB">Close</button>' +
       '</div></div></div>';
     }
@@ -3786,6 +3880,13 @@ function setupEvents() {
     if (target) {
       e.preventDefault();
       analyzeVisitAi(target.getAttribute('data-visit-id'));
+      return;
+    }
+
+    target = e.target.closest('[data-action="scan-visit-patterns"]');
+    if (target) {
+      e.preventDefault();
+      scanVisitPatterns(target.getAttribute('data-visit-id'));
       return;
     }
 
