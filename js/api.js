@@ -176,10 +176,6 @@ const API = (function () {
       return del('/api/' + table + '/' + encodeURIComponent(id));
     },
 
-    analyzeVisit(visitId) {
-      return post('/api/ai/analyze', { visitId: visitId });
-    },
-
     getPatientInsights(studentId, patientName) {
       return post('/api/insights/patient', { studentId: studentId, patientName: patientName });
     },

@@ -1,0 +1,33 @@
+- generic [ref=f2e998]:
+  - generic [ref=f2e1000]:
+    - heading "School Clinic" [level=1] [ref=f2e1004]
+    - paragraph [ref=f2e1005]: Management System
+    - paragraph [ref=f2e1006]: Secure access to clinic services and connected student health records.
+    - generic [ref=f2e1007]:
+      - generic [ref=f2e1008]: ONE PLATFORM
+      - generic [ref=f2e1009]:
+        - generic [ref=f2e1010]: Visits
+        - generic [ref=f2e1011]: Appointments
+        - generic [ref=f2e1012]: Medicines
+        - generic [ref=f2e1013]: Reports
+  - generic [ref=f2e1014]:
+    - generic [ref=f2e1015]: Secure Entry
+    - heading "Welcome Back" [level=2] [ref=f2e1016]
+    - paragraph [ref=f2e1017]: Sign in to access the School Clinic Management System.
+    - generic [ref=f2e1018]:
+      - generic [ref=f2e1019]:
+        - generic [ref=f2e1020]: Username or Email
+        - textbox "Enter your username or email" [ref=f2e1023]
+      - generic [ref=f2e1024]:
+        - generic [ref=f2e1025]: Password
+        - generic [ref=f2e1026]:
+          - textbox "Enter your password" [ref=f2e1028]
+          - button
+      - generic [ref=f2e1029]:
+        - generic [ref=f2e1030]:
+          - checkbox "Remember me" [ref=f2e1031]
+          - text: Remember me
+        - button "Forgot Password?" [ref=f2e1032] [cursor=pointer]
+      - button "Sign In" [ref=f2e1033] [cursor=pointer]
+    - paragraph [ref=f2e1034]: "Demo login — Username: admin · Password: admin123"
+    - paragraph [ref=f2e1035]: © 2025 School Clinic Management System. All rights reserved.

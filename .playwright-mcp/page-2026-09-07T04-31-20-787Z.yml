@@ -1,0 +1,101 @@
+- generic [ref=f2e2]:
+  - complementary [ref=f2e3]:
+    - generic [ref=f2e9]:
+      - paragraph [ref=f2e10]: School Clinic
+      - paragraph [ref=f2e11]: Management System
+    - navigation [ref=f2e12]:
+      - generic [ref=f2e13]:
+        - paragraph [ref=f2e14]: Overview
+        - button "Dashboard" [ref=f2e15] [cursor=pointer]
+      - generic [ref=f2e22]:
+        - paragraph [ref=f2e23]: Patient Services
+        - button "Student Medical Records" [ref=f2e24] [cursor=pointer]
+        - button "Medical Records" [ref=f2e29] [cursor=pointer]
+        - button "Medical History" [ref=f2e34] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=f2e39] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=f2e44] [cursor=pointer]
+      - generic [ref=f2e49]:
+        - paragraph [ref=f2e50]: Clinical Management
+        - button "Medicine Inventory" [ref=f2e51] [cursor=pointer]
+        - button "Incident & Emergency" [ref=f2e56] [cursor=pointer]
+      - generic [ref=f2e60]:
+        - paragraph [ref=f2e61]: Health Services
+        - button "Faculty & Staff Health" [ref=f2e62] [cursor=pointer]
+        - button "Health Programs" [ref=f2e69] [cursor=pointer]
+        - button "Health Clearance" [ref=f2e73] [cursor=pointer]
+      - generic [ref=f2e78]:
+        - paragraph [ref=f2e79]: Administration
+        - button "Reporting & Compliance" [ref=f2e80] [cursor=pointer]
+        - button "User Access Control" [ref=f2e85] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=f2e89] [cursor=pointer]
+    - generic [ref=f2e96]:
+      - generic [ref=f2e97]: "N"
+      - generic [ref=f2e98]:
+        - paragraph [ref=f2e99]: Nurse Admin
+        - paragraph [ref=f2e100]: Clinic Administrator
+      - button "Logout" [ref=f2e101] [cursor=pointer]
+    - button [ref=f2e105] [cursor=pointer]
+  - generic [ref=f2e108]:
+    - banner [ref=f2e109]:
+      - generic [ref=f2e111]:
+        - generic [ref=f2e112]: School Clinic
+        - generic [ref=f2e115]: Clinic Visit & Consultation Logging
+      - generic [ref=f2e116]:
+        - generic [ref=f2e117]:
+          - paragraph [ref=f2e118]: 12:31 PM
+          - paragraph [ref=f2e119]: Mon, Sep 7, 2026
+        - button [ref=f2e121] [cursor=pointer]
+        - button "N Nurse Admin" [ref=f2e126] [cursor=pointer]:
+          - generic [ref=f2e127]: "N"
+          - generic [ref=f2e128]: Nurse Admin
+    - main [ref=f2e129]:
+      - generic [ref=f2e130]:
+        - generic [ref=f2e131]:
+          - generic [ref=f2e138]:
+            - heading "Clinic Visit & Consultation Log" [level=2] [ref=f2e139]
+            - paragraph [ref=f2e140]: 0 visits on file
+          - generic [ref=f2e141]:
+            - button "Export" [ref=f2e142] [cursor=pointer]
+            - button "Import" [ref=f2e146] [cursor=pointer]
+            - link "Template" [ref=f2e150] [cursor=pointer]:
+              - /url: visits_import_template.csv
+            - button "Log Visit" [ref=f2e154] [cursor=pointer]
+        - generic [ref=f2e156]:
+          - textbox "Search patient, ID, complaint..." [ref=f2e161]
+          - textbox [ref=f2e162]
+          - combobox [ref=f2e163]:
+            - option "All" [selected]
+            - option "Student"
+            - option "Faculty/Staff"
+          - combobox [ref=f2e164]:
+            - option "All" [selected]
+            - option "Treated & Discharged"
+            - option "Referred to Doctor"
+            - option "Sent Home"
+            - option "Emergency Referral"
+            - option "Observation"
+          - button "Generate" [ref=f2e165] [cursor=pointer]
+          - generic [ref=f2e169]: 0 visits
+        - table [ref=f2e172]:
+          - rowgroup [ref=f2e173]:
+            - row [ref=f2e174]:
+              - columnheader "Visit ID" [ref=f2e175]
+              - columnheader "Patient" [ref=f2e176]
+              - columnheader "Type" [ref=f2e177]
+              - columnheader "Date & Time" [ref=f2e178]
+              - columnheader "Chief Complaint" [ref=f2e179]
+              - columnheader "Vital Signs" [ref=f2e180]
+              - columnheader "Diagnosis" [ref=f2e181]
+              - columnheader "Treatment" [ref=f2e182]
+              - columnheader "Disposition" [ref=f2e183]
+              - columnheader "Actions" [ref=f2e184]
+          - rowgroup [ref=f2e185]:
+            - row [ref=f2e186]:
+              - cell [ref=f2e187]:
+                - status [ref=f2e188]:
+                  - paragraph [ref=f2e195]: Loading visits…
+        - generic [ref=f2e196]:
+          - paragraph [ref=f2e197]: Showing 0 of 0
+          - generic [ref=f2e198]:
+            - button [disabled] [ref=f2e199]
+            - button [disabled] [ref=f2e202]

@@ -1,0 +1,87 @@
+- generic [ref=e2]:
+  - complementary [ref=e481]:
+    - generic [ref=e487]:
+      - paragraph [ref=e488]: School Clinic
+      - paragraph [ref=e489]: Management System
+    - navigation [ref=e490]:
+      - generic [ref=e491]:
+        - paragraph [ref=e492]: Overview
+        - button "Dashboard" [ref=e493] [cursor=pointer]
+      - generic [ref=e500]:
+        - paragraph [ref=e501]: Patient Services
+        - button "Student Medical Records" [ref=e502] [cursor=pointer]
+        - button "Medical Records" [ref=e508] [cursor=pointer]
+        - button "Medical History" [ref=e513] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=e518] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=e522] [cursor=pointer]
+      - generic [ref=e527]:
+        - paragraph [ref=e528]: Clinical Management
+        - button "Medicine Inventory" [ref=e529] [cursor=pointer]
+        - button "Incident & Emergency" [ref=e534] [cursor=pointer]
+      - generic [ref=e538]:
+        - paragraph [ref=e539]: Health Services
+        - button "Faculty & Staff Health" [ref=e540] [cursor=pointer]
+        - button "Health Programs" [ref=e547] [cursor=pointer]
+        - button "Health Clearance" [ref=e551] [cursor=pointer]
+      - generic [ref=e556]:
+        - paragraph [ref=e557]: Administration
+        - button "Reporting & Compliance" [ref=e558] [cursor=pointer]
+        - button "User Access Control" [ref=e563] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=e567] [cursor=pointer]
+    - generic [ref=e574]:
+      - generic [ref=e575]: "N"
+      - generic [ref=e576]:
+        - paragraph [ref=e577]: Nurse Admin
+        - paragraph [ref=e578]: Clinic Administrator
+      - button "Logout" [ref=e579] [cursor=pointer]
+    - button [ref=e583] [cursor=pointer]
+  - generic [ref=e586]:
+    - banner [ref=e587]:
+      - generic [ref=e589]:
+        - generic [ref=e590]: School Clinic
+        - generic [ref=e593]: Student Medical Records Management
+      - generic [ref=e594]:
+        - generic [ref=e595]:
+          - paragraph [ref=e596]: 10:44 AM
+          - paragraph [ref=e597]: Mon, Sep 7, 2026
+        - button [ref=e599] [cursor=pointer]
+        - button "N Nurse Admin" [ref=e604] [cursor=pointer]:
+          - generic [ref=e605]: "N"
+          - generic [ref=e606]: Nurse Admin
+    - main [ref=e607]:
+      - generic [ref=e608]:
+        - generic [ref=e609]:
+          - generic [ref=e615]:
+            - heading "Student Medical Records Management" [level=2] [ref=e616]
+            - paragraph [ref=e617]: 0 records on file
+          - textbox "Search records..." [ref=e623]
+        - combobox [ref=e625]:
+          - option "All Statuses" [selected]
+          - option "Active"
+          - option "Inactive"
+        - generic [ref=e626]: 0 records
+        - generic [ref=e628]:
+          - generic [ref=e629]:
+            - button "Enroll New Student" [ref=e630] [cursor=pointer]
+            - button "Import Excel" [ref=e634] [cursor=pointer]
+            - button "Export Excel" [ref=e638] [cursor=pointer]
+          - link "Download Template" [ref=e642] [cursor=pointer]:
+            - /url: students_import_template.csv
+        - table [ref=e648]:
+          - rowgroup [ref=e649]:
+            - row [ref=e650]:
+              - columnheader "Full Name" [ref=e651]
+              - columnheader "Student ID" [ref=e652]
+              - columnheader "Strand" [ref=e653]
+              - columnheader "Year Level" [ref=e654]
+              - columnheader "Status" [ref=e655]
+              - columnheader "Blood Type" [ref=e656]
+              - columnheader "Actions" [ref=e657]
+          - rowgroup [ref=e658]:
+            - row [ref=e659]:
+              - cell "No records found. Click \"Add New\" to create one." [ref=e660]
+        - generic [ref=e661]:
+          - paragraph [ref=e662]: Showing 0 of 0
+          - generic [ref=e663]:
+            - button [disabled] [ref=e664]
+            - button [disabled] [ref=e667]

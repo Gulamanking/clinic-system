@@ -44,7 +44,6 @@ const ICON_MAP = {
   users: 'user-cog',
 };
 
-const AI_DISCLAIMER = 'AI-generated information is for medical support and reference only. It does not replace professional medical judgment. Final assessment and diagnosis must be performed by authorized healthcare personnel.';
 
 /* ============================== RBAC ============================== */
 const ROLE_PERMISSIONS = {
@@ -98,8 +97,8 @@ function canAccessView(key) {
 const STUDENT_FIELDS = [
   { name: 'name', label: 'Full Name', type: 'text', required: true },
   { name: 'studentId', label: 'Student ID', type: 'text', required: true },
-  { name: 'course', label: 'Course / Program', type: 'select', options: ['BSIT', 'BSED', 'BSN', 'BSCS', 'BSA', 'BSBA', 'BSE', 'BSM', 'Other'] },
-  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year'] },
+  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'Arts and Design', 'Sports', 'Other'] },
+  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['Grade 11', 'Grade 12'] },
   { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'] },
   { name: 'allergies', label: 'Allergies', type: 'text' },
@@ -210,7 +209,7 @@ const MEDICAL_HISTORY_FIELDS = [
   { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], required: true },
   { name: 'section', label: 'Section', type: 'text', required: true },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'], required: true },
-  { name: 'course', label: 'Course/Program', type: 'select', options: ['BSIT', 'BSED', 'BSN', 'BSCS', 'BSA', 'BSBA', 'BSE', 'BSM', 'Other'], required: true },
+  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'Arts and Design', 'Sports', 'Other'], required: true },
   { name: 'diagnosis', label: 'Diagnosis', type: 'textarea' },
   { name: 'treatment', label: 'Treatment', type: 'textarea' },
   { name: 'doctor', label: 'Doctor', type: 'text' },
@@ -545,17 +544,37 @@ function renderLoadingScreen() {
 }
 
 function renderLoginScreen() {
-  return '<div class="flex w-full min-h-screen items-center justify-center p-4" style="background:#F8F7FA">' +
-    '<div class="grid w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl md:grid-cols-2">' +
-    '<div class="flex flex-col justify-center p-8 sm:p-10">' +
-    '<div class="mb-6 flex flex-col items-center text-center">' +
-    '<div class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background:#F0ECF2">' +
-    logoIcon(26, 'text-[#7B1028]') +
+  var platformItems = ['Visits', 'Appointments', 'Medicines', 'Reports'];
+  return '<div class="flex w-full min-h-screen items-center justify-center p-4 sm:p-8" style="background:#F4EFE6">' +
+    '<div class="grid w-full max-w-5xl overflow-hidden rounded-3xl shadow-2xl md:grid-cols-2">' +
+
+    // Left: brand panel
+    '<div class="relative hidden md:flex flex-col justify-center overflow-hidden p-10" style="background:linear-gradient(135deg,#241B2E 0%,#7B1028 55%,#3F0D1D 100%)">' +
+    '<div class="pointer-events-none absolute rounded-full" style="width:340px;height:340px;right:-90px;bottom:-90px;border:1px solid rgba(255,255,255,0.15)" aria-hidden="true"></div>' +
+    '<div class="relative z-10">' +
+    '<div class="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2)">' +
+    logoIcon(26, 'text-white') +
     '</div>' +
-    '<h1 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">School Clinic Management System</h1>' +
-    '<p class="mt-3 text-sm" style="color:#5A4A62">Sign in to your account</p>' +
+    '<h1 class="font-serif-heading text-2xl font-bold text-white">School Clinic</h1>' +
+    '<p class="mt-1 text-sm font-semibold tracking-wide" style="color:#C9A24E">Management System</p>' +
+    '<p class="mt-4 max-w-xs text-sm leading-relaxed" style="color:rgba(255,255,255,0.75)">Secure access to clinic services and connected student health records.</p>' +
+    '<div class="relative mt-8 rounded-2xl p-5" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15)">' +
+    '<span class="inline-block rounded-full px-3 py-1 text-[10px] font-semibold tracking-wide text-white" style="background:rgba(255,255,255,0.16)">ONE PLATFORM</span>' +
+    '<div class="mt-4 grid grid-cols-2 gap-2">' +
+    platformItems.map(function(label) {
+      return '<div class="rounded-xl px-3 py-2.5 text-center text-xs font-medium text-white" style="background:rgba(255,255,255,0.10)">' + label + '</div>';
+    }).join('') +
     '</div>' +
-    '<form id="login-form" class="space-y-4">' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+
+    // Right: form panel
+    '<div class="flex flex-col justify-center bg-white p-8 sm:p-12">' +
+    '<span class="text-[11px] font-semibold uppercase tracking-widest" style="color:#7B1028">Secure Entry</span>' +
+    '<h2 class="font-serif-heading mt-2 text-2xl font-bold" style="color:#2B2B2B">Welcome Back</h2>' +
+    '<p class="mt-2 text-sm" style="color:#5A4A62">Sign in to access the School Clinic Management System.</p>' +
+    '<form id="login-form" class="mt-6 space-y-4">' +
     '<div>' +
     '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Username or Email</label>' +
     '<div class="relative">' +
@@ -577,15 +596,12 @@ function renderLoginScreen() {
     '<button type="button" id="forgot-password" class="hover:underline" style="color:#C9A24E">Forgot Password?</button>' +
     '</div>' +
     '<div id="login-info" class="hidden text-xs" style="color:#5A4A62"></div>' +
-    '<button type="submit" id="login-submit" class="w-full rounded-lg py-2.5 text-sm font-medium text-white disabled:opacity-60" style="background:#7B1028;hover:background:#8A2346">Log In</button>' +
+    '<button type="submit" id="login-submit" class="w-full rounded-lg py-2.5 text-sm font-semibold text-white disabled:opacity-60" style="background:#7B1028;hover:background:#8A2346">Sign In</button>' +
     '</form>' +
     '<p class="mt-6 text-center text-[11px]" style="color:#5A4A62">Demo login &mdash; Username: <span class="font-medium">admin</span> &middot; Password: <span class="font-medium">admin123</span></p>' +
-    '<p class="mt-2 text-center text-[11px]" style="color:#E8D4DB">&copy; 2025 School Clinic Management System. All rights reserved.</p>' +
+    '<p class="mt-2 text-center text-[11px]" style="color:#B8B0BC">&copy; 2025 School Clinic Management System. All rights reserved.</p>' +
     '</div>' +
-    '<div class="relative hidden md:block overflow-hidden" style="background:linear-gradient(135deg,#7B1028,#3F0D1D)">' +
-    '<img src="https://images.pexels.com/photos/33812025/pexels-photo-33812025.jpeg?auto=compress&cs=tinysrgb&w=900&h=1100&fit=crop" alt="Modern clinic reception" class="h-full w-full object-cover" loading="lazy" />' +
-    '<div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(123,16,40,0.15),rgba(63,13,29,0.35))"></div>' +
-    '</div>' +
+
     '</div>' +
     '</div>';
 }
@@ -1501,45 +1517,6 @@ async function dispenseFromVisit(visitId) {
   }
 }
 
-function renderVisitAiWidget(visit, ms) {
-  if (!visit.diagnosis) return '';
-  var ai = ms.aiAnalysis && ms.aiAnalysis.visitId === visit.id ? ms.aiAnalysis : null;
-
-  var body = '';
-  if (ai && ai.loading) {
-    body = '<p class="text-xs" style="color:#7A7A7A">Requesting AI insights…</p>';
-  } else if (ai && ai.error) {
-    body = '<p class="text-xs" style="color:#C13030">' + esc(ai.error) + '</p>';
-  } else if (ai && ai.text) {
-    body = '<p class="text-xs whitespace-pre-line" style="color:#2B2B2B">' + esc(ai.text) + '</p>' +
-      '<p class="mt-2 text-[10px]" style="color:#7A7A7A">' + esc(ai.disclaimer || AI_DISCLAIMER) + '</p>';
-  } else {
-    body = '<button data-action="ai-analyze-visit" data-visit-id="' + esc(visit.id) + '" class="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[#7B1028] hover:bg-[#3F0D1D]">Get AI Insights</button>';
-  }
-
-  return '<div class="mt-4 p-3 rounded-lg border" style="border-color:#E8D4DB">' +
-    '<p class="text-[10px] font-semibold mb-2" style="color:#2B2B2B">AI Insights</p>' +
-    body +
-    '</div>';
-}
-
-async function analyzeVisitAi(visitId) {
-  var ms = getModuleState('visits');
-  ms.aiAnalysis = { visitId: visitId, loading: true };
-  renderMainContent();
-  try {
-    var res = await API.analyzeVisit(visitId);
-    if (res.status === 'success') {
-      ms.aiAnalysis = { visitId: visitId, text: res.analysis, disclaimer: res.disclaimer };
-    } else {
-      ms.aiAnalysis = { visitId: visitId, error: res.message || 'AI analysis is unavailable.' };
-    }
-  } catch (e) {
-    ms.aiAnalysis = { visitId: visitId, error: e.message || 'AI analysis request failed.' };
-  }
-  renderMainContent();
-}
-
 var RISK_LEVEL_COLOR = { Low: '#2A8B4A', Medium: '#C9A24E', High: '#C13030' };
 
 function renderVisitPatternWidget(visit, ms) {
@@ -1795,7 +1772,6 @@ function renderVisitsModule() {
       }).join('') +
       '</div>' +
       renderVisitDispenseWidget(vv, ms) +
-      renderVisitAiWidget(vv, ms) +
       renderVisitPatternWidget(vv, ms) +
       '<button data-view-close class="mt-4 w-full py-2 rounded-lg text-xs" style="background:#FFFFFF;color:#5A4A62;border:1px solid #E8D4DB">Close</button>' +
       '</div></div></div>';
@@ -3357,17 +3333,16 @@ function renderCrudModule(key) {
       '<input type="text" name="studentId" value="' + esc(ms.enrollmentForm.studentId || '') + '" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB" placeholder="e.g., BCP-2024-0001">' +
       '</div>' +
       '<div>' +
-      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Course / Program</label>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Strand</label>' +
       '<select name="course" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
-      '<option value="">Select course</option>' +
-      '<option value="BSIT"' + (ms.enrollmentForm.course === 'BSIT' ? ' selected' : '') + '>BSIT</option>' +
-      '<option value="BSED"' + (ms.enrollmentForm.course === 'BSED' ? ' selected' : '') + '>BSED</option>' +
-      '<option value="BSN"' + (ms.enrollmentForm.course === 'BSN' ? ' selected' : '') + '>BSN</option>' +
-      '<option value="BSCS"' + (ms.enrollmentForm.course === 'BSCS' ? ' selected' : '') + '>BSCS</option>' +
-      '<option value="BSA"' + (ms.enrollmentForm.course === 'BSA' ? ' selected' : '') + '>BSA</option>' +
-      '<option value="BSBA"' + (ms.enrollmentForm.course === 'BSBA' ? ' selected' : '') + '>BSBA</option>' +
-      '<option value="BSE"' + (ms.enrollmentForm.course === 'BSE' ? ' selected' : '') + '>BSE</option>' +
-      '<option value="BSM"' + (ms.enrollmentForm.course === 'BSM' ? ' selected' : '') + '>BSM</option>' +
+      '<option value="">Select strand</option>' +
+      '<option value="STEM"' + (ms.enrollmentForm.course === 'STEM' ? ' selected' : '') + '>STEM</option>' +
+      '<option value="ABM"' + (ms.enrollmentForm.course === 'ABM' ? ' selected' : '') + '>ABM</option>' +
+      '<option value="HUMSS"' + (ms.enrollmentForm.course === 'HUMSS' ? ' selected' : '') + '>HUMSS</option>' +
+      '<option value="GAS"' + (ms.enrollmentForm.course === 'GAS' ? ' selected' : '') + '>GAS</option>' +
+      '<option value="TVL"' + (ms.enrollmentForm.course === 'TVL' ? ' selected' : '') + '>TVL</option>' +
+      '<option value="Arts and Design"' + (ms.enrollmentForm.course === 'Arts and Design' ? ' selected' : '') + '>Arts and Design</option>' +
+      '<option value="Sports"' + (ms.enrollmentForm.course === 'Sports' ? ' selected' : '') + '>Sports</option>' +
       '<option value="Other"' + (ms.enrollmentForm.course === 'Other' ? ' selected' : '') + '>Other</option>' +
       '</select>' +
       '</div>' +
@@ -3375,10 +3350,8 @@ function renderCrudModule(key) {
       '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Year Level</label>' +
       '<select name="yearLevel" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
       '<option value="">Select year level</option>' +
-      '<option value="1st Year"' + (ms.enrollmentForm.yearLevel === '1st Year' ? ' selected' : '') + '>1st Year</option>' +
-      '<option value="2nd Year"' + (ms.enrollmentForm.yearLevel === '2nd Year' ? ' selected' : '') + '>2nd Year</option>' +
-      '<option value="3rd Year"' + (ms.enrollmentForm.yearLevel === '3rd Year' ? ' selected' : '') + '>3rd Year</option>' +
-      '<option value="4th Year"' + (ms.enrollmentForm.yearLevel === '4th Year' ? ' selected' : '') + '>4th Year</option>' +
+      '<option value="Grade 11"' + (ms.enrollmentForm.yearLevel === 'Grade 11' ? ' selected' : '') + '>Grade 11</option>' +
+      '<option value="Grade 12"' + (ms.enrollmentForm.yearLevel === 'Grade 12' ? ' selected' : '') + '>Grade 12</option>' +
       '</select>' +
       '</div>' +
       '<div>' +
@@ -3873,13 +3846,6 @@ function setupEvents() {
     if (target) {
       e.preventDefault();
       dispenseFromVisit(target.getAttribute('data-visit-id'));
-      return;
-    }
-
-    target = e.target.closest('[data-action="ai-analyze-visit"]');
-    if (target) {
-      e.preventDefault();
-      analyzeVisitAi(target.getAttribute('data-visit-id'));
       return;
     }
 
@@ -4472,7 +4438,8 @@ function setupEvents() {
       var ms = getModuleState(searchKey);
       ms.search = target.value;
       ms.page = 1;
-      renderMainContent();
+      renderMainContentPreserveFocus();
+      return;
     }
     var groupsKey = target.getAttribute('data-groups-select');
     if (groupsKey) {
@@ -4484,7 +4451,7 @@ function setupEvents() {
     if (target.id === 'audit-filter-user') {
       state.auditFilter = state.auditFilter || {};
       state.auditFilter.user = target.value;
-      renderMainContent();
+      renderMainContentPreserveFocus();
       return;
     }
     if (target.name === 'type' && target.form && target.form.getAttribute('data-save-form') === 'medicalRecordGroup') {
@@ -4666,6 +4633,37 @@ function navigateTo(view) {
     loadModuleData(view);
   }
   saveState();
+}
+
+// renderMainContent() replaces #root main's innerHTML wholesale — calling it
+// straight from a text input's 'input' handler destroys and recreates that
+// input's DOM node on every keystroke, dropping focus and forcing the user
+// to click back in before each character. This re-focuses (and restores
+// caret position on) whichever field was focused, so typing stays fluid.
+function renderMainContentPreserveFocus() {
+  var active = document.activeElement;
+  var selector = null;
+  if (active && active !== document.body) {
+    if (active.id) {
+      selector = '#' + CSS.escape(active.id);
+    } else if (active.getAttribute && active.getAttribute('data-search')) {
+      selector = '[data-search="' + active.getAttribute('data-search') + '"]';
+    }
+  }
+  var start = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  var end = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+
+  renderMainContent();
+
+  if (selector) {
+    var el = document.querySelector(selector);
+    if (el) {
+      el.focus();
+      if (start !== null && el.setSelectionRange) {
+        try { el.setSelectionRange(start, end); } catch (e) {}
+      }
+    }
+  }
 }
 
 function renderMainContent() {
@@ -4972,7 +4970,7 @@ function exportStudents() {
   }
 
   // Create CSV content
-  var headers = ['Full Name', 'Student ID', 'Course', 'Year Level', 'Status', 'Blood Type', 'Allergies', 'Medical Conditions', 'Contact Number', 'Emergency Contact'];
+  var headers = ['Full Name', 'Student ID', 'Strand', 'Year Level', 'Status', 'Blood Type', 'Allergies', 'Medical Conditions', 'Contact Number', 'Emergency Contact'];
   var csvContent = headers.join(',') + '\n';
 
   students.forEach(function(student) {

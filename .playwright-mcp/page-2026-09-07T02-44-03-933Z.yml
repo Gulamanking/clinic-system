@@ -1,0 +1,229 @@
+- generic [ref=e2]:
+  - complementary [ref=e33]:
+    - generic [ref=e39]:
+      - paragraph [ref=e40]: School Clinic
+      - paragraph [ref=e41]: Management System
+    - navigation [ref=e42]:
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: Overview
+        - button "Dashboard" [ref=e45] [cursor=pointer]
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: Patient Services
+        - button "Student Medical Records" [ref=e55] [cursor=pointer]
+        - button "Medical Records" [ref=e60] [cursor=pointer]
+        - button "Medical History" [ref=e65] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=e70] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=e74] [cursor=pointer]
+      - generic [ref=e79]:
+        - paragraph [ref=e80]: Clinical Management
+        - button "Medicine Inventory" [ref=e81] [cursor=pointer]
+        - button "Incident & Emergency" [ref=e86] [cursor=pointer]
+      - generic [ref=e90]:
+        - paragraph [ref=e91]: Health Services
+        - button "Faculty & Staff Health" [ref=e92] [cursor=pointer]
+        - button "Health Programs" [ref=e99] [cursor=pointer]
+        - button "Health Clearance" [ref=e103] [cursor=pointer]
+      - generic [ref=e108]:
+        - paragraph [ref=e109]: Administration
+        - button "Reporting & Compliance" [ref=e110] [cursor=pointer]
+        - button "User Access Control" [ref=e115] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=e119] [cursor=pointer]
+    - generic [ref=e126]:
+      - generic [ref=e127]: "N"
+      - generic [ref=e128]:
+        - paragraph [ref=e129]: Nurse Admin
+        - paragraph [ref=e130]: Clinic Administrator
+      - button "Logout" [ref=e131] [cursor=pointer]
+    - button [ref=e135] [cursor=pointer]
+  - generic [ref=e138]:
+    - banner [ref=e139]:
+      - generic [ref=e141]:
+        - generic [ref=e142]: School Clinic
+        - generic [ref=e145]: Dashboard
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - paragraph [ref=e148]: 10:44 AM
+          - paragraph [ref=e149]: Mon, Sep 7, 2026
+        - button [ref=e151] [cursor=pointer]
+        - button "N Nurse Admin" [ref=e156] [cursor=pointer]:
+          - generic [ref=e157]: "N"
+          - generic [ref=e158]: Nurse Admin
+    - main [ref=e159]:
+      - generic [ref=e160]:
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - paragraph [ref=e167]: Monday, September 7, 2026
+            - heading "Good morning, Nurse Admin!" [level=1] [ref=e168]
+            - paragraph [ref=e169]: Here's your clinic overview for today. Stay on top of all health services.
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - paragraph [ref=e172]: School Year
+              - paragraph [ref=e173]: 2024 – 2025
+            - generic [ref=e175]:
+              - paragraph [ref=e176]: Total Staff
+              - paragraph [ref=e177]: "0"
+        - generic [ref=e179]:
+          - button "+0 0 Enrolled Students" [ref=e180] [cursor=pointer]:
+            - generic [ref=e181]: "+0"
+            - paragraph [ref=e191]: "0"
+            - paragraph [ref=e192]: Enrolled Students
+          - button "+0 0 Today's Visits" [ref=e193] [cursor=pointer]:
+            - generic [ref=e194]: "+0"
+            - paragraph [ref=e205]: "0"
+            - paragraph [ref=e206]: Today's Visits
+          - button "+0 0 Low Stock Alerts" [ref=e207] [cursor=pointer]:
+            - generic [ref=e208]: "+0"
+            - paragraph [ref=e218]: "0"
+            - paragraph [ref=e219]: Low Stock Alerts
+          - button "+0 0 Pending Appts." [ref=e220] [cursor=pointer]:
+            - generic [ref=e221]: "+0"
+            - paragraph [ref=e231]: "0"
+            - paragraph [ref=e232]: Pending Appts.
+          - button "0 0 Open Incidents" [ref=e233] [cursor=pointer]:
+            - generic [ref=e234]: "0"
+            - paragraph [ref=e241]: "0"
+            - paragraph [ref=e242]: Open Incidents
+          - button "+0 0 Clearances" [ref=e243] [cursor=pointer]:
+            - generic [ref=e244]: "+0"
+            - paragraph [ref=e254]: "0"
+            - paragraph [ref=e255]: Clearances
+        - generic [ref=e256]:
+          - generic [ref=e258]:
+            - generic [ref=e259]:
+              - heading "Weekly Clinic Visits" [level=3] [ref=e260]
+              - paragraph [ref=e261]: Visits recorded this week
+            - generic [ref=e262]: This Week
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - heading "Consultation Types" [level=3] [ref=e267]
+              - paragraph [ref=e268]: Distribution this month
+            - generic [ref=e271]:
+              - generic [ref=e272]:
+                - generic [ref=e273]: General Illness
+                - generic [ref=e276]: 100%
+              - generic [ref=e277]:
+                - generic [ref=e278]: Injury/Accident
+                - generic [ref=e281]: 0%
+              - generic [ref=e282]:
+                - generic [ref=e283]: Follow-up
+                - generic [ref=e286]: 0%
+              - generic [ref=e287]:
+                - generic [ref=e288]: Dental
+                - generic [ref=e291]: 0%
+              - generic [ref=e292]:
+                - generic [ref=e293]: Mental Health
+                - generic [ref=e296]: 0%
+        - generic [ref=e297]:
+          - generic [ref=e298]:
+            - generic [ref=e299]:
+              - heading "Recent Clinic Visits" [level=3] [ref=e300]
+              - button "View All" [ref=e301] [cursor=pointer]
+            - table [ref=e304]:
+              - rowgroup [ref=e305]:
+                - row [ref=e306]:
+                  - columnheader "Patient" [ref=e307]
+                  - columnheader "Grade / Dept." [ref=e308]
+                  - columnheader "Chief Complaint" [ref=e309]
+                  - columnheader "Time" [ref=e310]
+                  - columnheader "Status" [ref=e311]
+              - rowgroup [ref=e312]:
+                - row [ref=e313]:
+                  - cell [ref=e314]:
+                    - paragraph [ref=e315]: AI Test Patient
+                    - paragraph [ref=e316]: CV-2026-01
+                  - cell "—" [ref=e317]
+                  - cell "headache" [ref=e318]
+                  - cell "13:12" [ref=e319]
+                  - cell "Treated" [ref=e320]
+                - row [ref=e321]:
+                  - cell [ref=e322]:
+                    - paragraph [ref=e323]: Juan Dela Cruz
+                    - paragraph [ref=e324]: 60a2cf9f98c12f3da19460d6
+                  - cell "Student" [ref=e325]
+                  - cell "Headache and dizziness" [ref=e326]
+                  - cell "09:30" [ref=e327]
+                  - cell "Treated & Discharged" [ref=e328]
+                - row [ref=e329]:
+                  - cell [ref=e330]:
+                    - paragraph [ref=e331]: Maria Santos
+                    - paragraph [ref=e332]: 42478ebfce44f7e327082e09
+                  - cell "Faculty/Staff" [ref=e333]
+                  - cell "Lower back pain" [ref=e334]
+                  - cell "10:15" [ref=e335]
+                  - cell "Treated & Discharged" [ref=e336]
+                - row [ref=e337]:
+                  - cell [ref=e338]:
+                    - paragraph [ref=e339]: AI Button Test
+                    - paragraph [ref=e340]: CV-2026-02
+                  - cell "—" [ref=e341]
+                  - cell "fever" [ref=e342]
+                  - cell "14:04" [ref=e343]
+                  - cell "Treated" [ref=e344]
+                - row [ref=e345]:
+                  - cell [ref=e346]:
+                    - paragraph [ref=e347]: Pattern Test Kid
+                    - paragraph [ref=e348]: 7e197caf1b3ced62f7c54020
+                  - cell "Student" [ref=e349]
+                  - cell "cough" [ref=e350]
+                  - cell "—" [ref=e351]
+                  - cell "Treated" [ref=e352]
+          - generic [ref=e353]:
+            - heading "Quick Access" [level=3] [ref=e354]
+            - generic [ref=e355]:
+              - button [ref=e356] [cursor=pointer]:
+                - generic [ref=e361]:
+                  - paragraph [ref=e362]: Student Medical Records
+                  - paragraph [ref=e363]: 0 students enrolled
+              - button [ref=e366] [cursor=pointer]:
+                - generic [ref=e372]:
+                  - paragraph [ref=e373]: Clinic Visit & Consultation
+                  - paragraph [ref=e374]: 0 visits today
+              - button [ref=e377] [cursor=pointer]:
+                - generic [ref=e382]:
+                  - paragraph [ref=e383]: Medicine Inventory
+                  - paragraph [ref=e384]: 0 low stock items
+              - button [ref=e387] [cursor=pointer]:
+                - generic [ref=e392]:
+                  - paragraph [ref=e393]: Appointment Scheduling
+                  - paragraph [ref=e394]: 0 pending
+              - button [ref=e397] [cursor=pointer]:
+                - generic [ref=e401]:
+                  - paragraph [ref=e402]: Incident & Emergency
+                  - paragraph [ref=e403]: 0 open cases
+              - button [ref=e406] [cursor=pointer]:
+                - generic [ref=e413]:
+                  - paragraph [ref=e414]: Faculty & Staff Health
+                  - paragraph [ref=e415]: Staff health records
+        - generic [ref=e418]:
+          - heading "All Modules" [level=3] [ref=e419]
+          - generic [ref=e420]:
+            - button [ref=e421] [cursor=pointer]:
+              - paragraph [ref=e425]: Student Medical Records
+              - paragraph [ref=e426]: 0 students
+            - button [ref=e427] [cursor=pointer]:
+              - paragraph [ref=e432]: Clinic Visit & Consultation
+              - paragraph [ref=e433]: 0 visits today
+            - button [ref=e434] [cursor=pointer]:
+              - paragraph [ref=e438]: Medicine Inventory
+              - paragraph [ref=e439]: 0 low stock
+            - button [ref=e440] [cursor=pointer]:
+              - paragraph [ref=e444]: Appointment Scheduling
+              - paragraph [ref=e445]: 0 pending
+            - button [ref=e446] [cursor=pointer]:
+              - paragraph [ref=e449]: Incident & Emergency
+              - paragraph [ref=e450]: 0 open cases
+            - button [ref=e451] [cursor=pointer]:
+              - paragraph [ref=e457]: Faculty & Staff Health
+              - paragraph [ref=e458]: Staff records
+            - button [ref=e459] [cursor=pointer]:
+              - paragraph [ref=e462]: School Health Programs
+              - paragraph [ref=e463]: Program monitoring
+            - button [ref=e464] [cursor=pointer]:
+              - paragraph [ref=e468]: Health Clearance
+              - paragraph [ref=e469]: 0 generated
+            - button [ref=e470] [cursor=pointer]:
+              - paragraph [ref=e474]: Reporting & Compliance
+              - paragraph [ref=e475]: Monthly reports
+            - button [ref=e476] [cursor=pointer]:
+              - paragraph [ref=e479]: User Access Control
+              - paragraph [ref=e480]: User management

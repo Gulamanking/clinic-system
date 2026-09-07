@@ -1,0 +1,23 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - heading "School Clinic Management System" [level=1] [ref=e10]
+      - paragraph [ref=e11]: Sign in to your account
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: Username or Email
+        - textbox "Enter your username or email" [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e19]: Password
+        - generic [ref=e20]:
+          - textbox "Enter your password" [ref=e22]
+          - button
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - checkbox "Remember me" [ref=e25]
+          - text: Remember me
+        - button "Forgot Password?" [ref=e26] [cursor=pointer]
+      - button "Log In" [ref=e27] [cursor=pointer]
+    - paragraph [ref=e28]: "Demo login — Username: admin · Password: admin123"
+    - paragraph [ref=e29]: © 2025 School Clinic Management System. All rights reserved.
+  - img "Modern clinic reception" [ref=e31]

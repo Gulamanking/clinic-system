@@ -1,0 +1,159 @@
+- generic [ref=e2]:
+  - complementary [ref=e481]:
+    - generic [ref=e487]:
+      - paragraph [ref=e488]: School Clinic
+      - paragraph [ref=e489]: Management System
+    - navigation [ref=e490]:
+      - generic [ref=e491]:
+        - paragraph [ref=e492]: Overview
+        - button "Dashboard" [ref=e493] [cursor=pointer]
+      - generic [ref=e500]:
+        - paragraph [ref=e501]: Patient Services
+        - button "Student Medical Records" [ref=e502] [cursor=pointer]
+        - button "Medical Records" [ref=e508] [cursor=pointer]
+        - button "Medical History" [ref=e513] [cursor=pointer]
+        - button "Clinic Visit & Consultation" [ref=e518] [cursor=pointer]
+        - button "Appointment Scheduling" [ref=e522] [cursor=pointer]
+      - generic [ref=e527]:
+        - paragraph [ref=e528]: Clinical Management
+        - button "Medicine Inventory" [ref=e529] [cursor=pointer]
+        - button "Incident & Emergency" [ref=e534] [cursor=pointer]
+      - generic [ref=e538]:
+        - paragraph [ref=e539]: Health Services
+        - button "Faculty & Staff Health" [ref=e540] [cursor=pointer]
+        - button "Health Programs" [ref=e547] [cursor=pointer]
+        - button "Health Clearance" [ref=e551] [cursor=pointer]
+      - generic [ref=e556]:
+        - paragraph [ref=e557]: Administration
+        - button "Reporting & Compliance" [ref=e558] [cursor=pointer]
+        - button "User Access Control" [ref=e563] [cursor=pointer]
+        - button "Privacy Consent Tracking" [ref=e567] [cursor=pointer]
+    - generic [ref=e574]:
+      - generic [ref=e575]: "N"
+      - generic [ref=e576]:
+        - paragraph [ref=e577]: Nurse Admin
+        - paragraph [ref=e578]: Clinic Administrator
+      - button "Logout" [ref=e579] [cursor=pointer]
+    - button [ref=e583] [cursor=pointer]
+  - generic [ref=e586]:
+    - banner [ref=e587]:
+      - generic [ref=e589]:
+        - generic [ref=e590]: School Clinic
+        - generic [ref=e593]: Student Medical Records Management
+      - generic [ref=e594]:
+        - generic [ref=e595]:
+          - paragraph [ref=e596]: 10:44 AM
+          - paragraph [ref=e597]: Mon, Sep 7, 2026
+        - button [ref=e599] [cursor=pointer]
+        - button "N Nurse Admin" [ref=e604] [cursor=pointer]:
+          - generic [ref=e605]: "N"
+          - generic [ref=e606]: Nurse Admin
+    - main [ref=e607]:
+      - generic [ref=e838]:
+        - generic [ref=e839]:
+          - generic [ref=e845]:
+            - heading "Student Medical Records Management" [level=2] [ref=e846]
+            - paragraph [ref=e847]: 0 records on file
+          - textbox "Search records..." [ref=e853]: maria
+        - combobox [ref=e855]:
+          - option "All Statuses" [selected]
+          - option "Active"
+          - option "Inactive"
+        - generic [ref=e856]: 0 records
+        - generic [ref=e858]:
+          - generic [ref=e859]:
+            - button "Enroll New Student" [ref=e860] [cursor=pointer]
+            - button "Import Excel" [ref=e864] [cursor=pointer]
+            - button "Export Excel" [ref=e868] [cursor=pointer]
+          - link "Download Template" [ref=e872] [cursor=pointer]:
+            - /url: students_import_template.csv
+        - table [ref=e878]:
+          - rowgroup [ref=e879]:
+            - row [ref=e880]:
+              - columnheader "Full Name" [ref=e881]
+              - columnheader "Student ID" [ref=e882]
+              - columnheader "Strand" [ref=e883]
+              - columnheader "Year Level" [ref=e884]
+              - columnheader "Status" [ref=e885]
+              - columnheader "Blood Type" [ref=e886]
+              - columnheader "Actions" [ref=e887]
+          - rowgroup [ref=e888]:
+            - row [ref=e889]:
+              - cell "No records found. Click \"Add New\" to create one." [ref=e890]
+        - generic [ref=e891]:
+          - paragraph [ref=e892]: Showing 0 of 0
+          - generic [ref=e893]:
+            - button [disabled] [ref=e894]
+            - button [disabled] [ref=e897]
+        - generic [ref=e901]:
+          - generic [ref=e902]:
+            - heading "Student Medical Enrollment" [level=3] [ref=e903]
+            - button [ref=e904] [cursor=pointer]
+          - generic [ref=e908]:
+            - generic [ref=e909]:
+              - generic [ref=e910]:
+                - heading "Personal Information" [level=3] [ref=e911]
+                - generic [ref=e912]:
+                  - generic [ref=e913]:
+                    - generic [ref=e914]: Full Name *
+                    - textbox "Enter student's full name" [ref=e915]
+                  - generic [ref=e916]:
+                    - generic [ref=e917]: Student ID *
+                    - textbox "e.g., BCP-2024-0001" [ref=e918]
+                  - generic [ref=e919]:
+                    - generic [ref=e920]: Strand
+                    - combobox [ref=e921]:
+                      - option "Select strand" [selected]
+                      - option "STEM"
+                      - option "ABM"
+                      - option "HUMSS"
+                      - option "GAS"
+                      - option "TVL"
+                      - option "Arts and Design"
+                      - option "Sports"
+                      - option "Other"
+                  - generic [ref=e922]:
+                    - generic [ref=e923]: Year Level
+                    - combobox [ref=e924]:
+                      - option "Select year level" [selected]
+                      - option "Grade 11"
+                      - option "Grade 12"
+                  - generic [ref=e925]:
+                    - generic [ref=e926]: Status
+                    - combobox [ref=e927]:
+                      - option "Active" [selected]
+                      - option "Inactive"
+              - generic [ref=e928]:
+                - heading "Medical Information" [level=3] [ref=e929]
+                - generic [ref=e930]:
+                  - generic [ref=e931]:
+                    - generic [ref=e932]: Blood Type
+                    - combobox [ref=e933]:
+                      - option "Select blood type" [selected]
+                      - option "A+"
+                      - option "A-"
+                      - option "B+"
+                      - option "B-"
+                      - option "O+"
+                      - option "O-"
+                      - option "AB+"
+                      - option "AB-"
+                      - option "Unknown"
+                  - generic [ref=e934]:
+                    - generic [ref=e935]: Allergies
+                    - textbox "e.g., Penicillin, Peanuts, None" [ref=e936]
+                  - generic [ref=e937]:
+                    - generic [ref=e938]: Medical Conditions
+                    - textbox "Any existing medical conditions, chronic illnesses, or important health information..." [ref=e939]
+              - generic [ref=e940]:
+                - heading "Contact Information" [level=3] [ref=e941]
+                - generic [ref=e942]:
+                  - generic [ref=e943]:
+                    - generic [ref=e944]: Contact Number
+                    - textbox "e.g., 09171234567" [ref=e945]
+                  - generic [ref=e946]:
+                    - generic [ref=e947]: Emergency Contact
+                    - textbox "e.g., Maria Dela Cruz - 09179876543" [ref=e948]
+            - generic [ref=e949]:
+              - button "Cancel" [ref=e950] [cursor=pointer]
+              - button "Enroll Student" [ref=e951] [cursor=pointer]

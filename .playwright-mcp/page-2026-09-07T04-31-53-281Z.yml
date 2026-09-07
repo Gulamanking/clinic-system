@@ -1,0 +1,7 @@
+- generic [ref=f2e988]:
+  - img "Clinic reception" [ref=f2e990]
+  - img "Medical consultation room" [ref=f2e992]
+  - heading "You have been logged out" [level=1] [ref=f2e993]
+  - paragraph [ref=f2e994]: Thank you for using the School Clinic Management System.
+  - button "Log In Again" [ref=f2e995] [cursor=pointer]
+  - paragraph [ref=f2e996]: © 2025 School Clinic Management System. All rights reserved.
