@@ -392,6 +392,16 @@ function renderFieldInput(field, value, namePrefix, readonly) {
 // already enrolled/registered; a genuine walk-in not yet in the system still
 // falls back to the name-based match, which is the correct behavior for that
 // case (there's nothing to link to yet).
+// The lists above are cached on the module state, which lives for as long as
+// the page does. Someone enrolled after this module first loaded would be
+// missing from the dropdown until a full browser reload — which looked like
+// "only one student shows up". Dropping the cache when the form opens makes
+// it refetch once per open.
+function invalidatePatientLinkLists(ms) {
+  delete ms.allStudents;
+  delete ms.allStaffMembers;
+}
+
 function lazyLoadPatientLinkLists(ms) {
   if (typeof ms.allStudents !== 'undefined') return;
   ms.allStudents = null;
@@ -3335,9 +3345,7 @@ function renderCrudModule(key) {
       '<option value="ABM"' + (ms.enrollmentForm.course === 'ABM' ? ' selected' : '') + '>ABM</option>' +
       '<option value="HUMSS"' + (ms.enrollmentForm.course === 'HUMSS' ? ' selected' : '') + '>HUMSS</option>' +
       '<option value="GAS"' + (ms.enrollmentForm.course === 'GAS' ? ' selected' : '') + '>GAS</option>' +
-      '<option value="TVL"' + (ms.enrollmentForm.course === 'TVL' ? ' selected' : '') + '>TVL</option>' +
-      '<option value="Arts and Design"' + (ms.enrollmentForm.course === 'Arts and Design' ? ' selected' : '') + '>Arts and Design</option>' +
-      '<option value="Sports"' + (ms.enrollmentForm.course === 'Sports' ? ' selected' : '') + '>Sports</option>' +
+      '<option value="ICT"' + (ms.enrollmentForm.course === 'ICT' ? ' selected' : '') + '>ICT</option>' +
       '<option value="Other"' + (ms.enrollmentForm.course === 'Other' ? ' selected' : '') + '>Other</option>' +
       '</select>' +
       '</div>' +
@@ -5161,6 +5169,7 @@ function openAddForm(key) {
   ms.form = blank;
   ms.editing = null;
   ms.error = '';
+  invalidatePatientLinkLists(ms);
   ms.modalOpen = true;
   renderMainContent();
 }
