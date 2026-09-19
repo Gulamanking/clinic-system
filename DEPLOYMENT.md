@@ -129,3 +129,24 @@ application environment variables, marking the password as **Secret**.
 Set the environment variables **before** redeploying. Deployments are labelled
 `production`; if `APP_ENV=production` reaches the container before the secrets
 do, the startup check will refuse to serve and return a 500.
+
+## Bump the asset version on every frontend deploy
+
+`index.html` and `enrollment.html` load the JavaScript with a `?v=NN` query
+string:
+
+```html
+<script src="js/api.js?v=39"></script>
+<script src="js/app.js?v=39"></script>
+```
+
+The host serves those files with `Cache-Control: public, max-age=2592000,
+immutable`. `immutable` tells the browser the URL's content will never change,
+so it will not revalidate for thirty days — an ordinary refresh does not help,
+only a hard reload.
+
+**Increment `v` in both files whenever `js/app.js` or `js/api.js` changes.**
+Otherwise returning users keep running the old bundle and the deploy looks like
+it did nothing. This number sat at `38` from the first commit until September
+2026, so every JavaScript change before then only reached people who happened
+to hard-refresh.
