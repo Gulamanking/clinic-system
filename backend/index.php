@@ -484,6 +484,11 @@ const BACKUP_TABLES = [
     'doctor_schedule', 'incidents', 'emergency_treatment', 'staff', 'employee_medical_record',
     'employee_visit', 'employee_medicine', 'programs', 'participants', 'attendance', 'assessment',
     'clearance', 'audit_logs', 'ai_requests', 'permissions', 'role_permissions',
+    // These were omitted, so a restore silently dropped them: privacy
+    // consents are a compliance record, roles may have been customised,
+    // record folders organise the medical records view, and attachments
+    // are scanned clinical documents.
+    'privacy_consents', 'roles', 'record_folders', 'attachments',
 ];
 
 function handleBackup(): void {
@@ -736,6 +741,7 @@ function handleRecordFoldersUpdate() {
 /* ============================== ROUTING ============================== */
 
 $resourceMap = [
+    'attachments' => 'attachments',
     'students' => 'students',
     'medicalRecords' => 'medicalrecords',
     'medicalrecords' => 'medicalrecords',
@@ -846,6 +852,95 @@ function certificateSignature(string $id, array $cert): string {
 // number is a call order, not an identifier, and a permanent gap would
 // leave staff calling 003 when 002 was never seen. The visit id stays
 // unique regardless.
+// Attachments (spec Module 1: "PDF/image attachments"). Stored in the database
+// as base64 rather than on disk, because the application filesystem does not
+// survive a redeploy while the managed database does — a medical record's
+// scanned referral cannot quietly disappear on the next deploy.
+const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
+const ATTACHMENT_ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+
+function handleAttachmentCreate(array $input, array $user) {
+    $recordType = trim((string)($input['recordType'] ?? ''));
+    $recordId = trim((string)($input['recordId'] ?? ''));
+    $fileName = trim((string)($input['fileName'] ?? ''));
+    $mimeType = strtolower(trim((string)($input['mimeType'] ?? '')));
+    $data = (string)($input['data'] ?? '');
+
+    if ($recordType === '' || $recordId === '') {
+        jsonResponse(['error' => 'recordType and recordId are required'], 400);
+    }
+    if ($fileName === '') {
+        jsonResponse(['error' => 'fileName is required'], 400);
+    }
+    if (!in_array($mimeType, ATTACHMENT_ALLOWED_TYPES, true)) {
+        jsonResponse(['error' => 'Unsupported file type. Allowed: ' . implode(', ', ATTACHMENT_ALLOWED_TYPES)], 415);
+    }
+    // Accept a data: URL as well as bare base64, since that is what FileReader
+    // hands the browser.
+    if (str_starts_with($data, 'data:')) {
+        $comma = strpos($data, ',');
+        $data = $comma === false ? '' : substr($data, $comma + 1);
+    }
+    $binary = base64_decode($data, true);
+    if ($binary === false || $binary === '') {
+        jsonResponse(['error' => 'File content must be base64'], 400);
+    }
+    $size = strlen($binary);
+    if ($size > ATTACHMENT_MAX_BYTES) {
+        jsonResponse(['error' => 'File is larger than the ' . (ATTACHMENT_MAX_BYTES / 1024 / 1024) . 'MB limit'], 413);
+    }
+
+    $row = dbCreate('attachments', [
+        'recordType' => $recordType,
+        'recordId' => $recordId,
+        // Strip any path the browser sent; only the leaf name is meaningful.
+        'fileName' => basename($fileName),
+        'mimeType' => $mimeType,
+        'sizeBytes' => $size,
+        'content' => base64_encode($binary),
+        'uploadedBy' => $user['username'] ?? '',
+    ]);
+    dbLogAudit($user, 'attachment.uploaded', 'attachments', $row['id'] ?? '', [
+        'recordType' => $recordType, 'recordId' => $recordId, 'sizeBytes' => $size,
+    ]);
+    unset($row['content']);
+    jsonResponse($row, 201);
+}
+
+// Metadata only. The content column holds whole files, so returning it from a
+// list endpoint would send every attachment in the system on one request.
+//
+// The owning record is taken from the path rather than a query string: this
+// API is reached as ?route=<path>, so anything after a second '?' never
+// arrives as $_GET.
+function handleAttachmentList(array $user, string $recordId = '') {
+    $recordId = trim($recordId);
+    $rows = dbGetAll('attachments');
+    if ($recordId !== '') {
+        $rows = array_values(array_filter($rows, fn($a) => ($a['recordId'] ?? '') === $recordId));
+    }
+    $rows = array_map(function ($a) { unset($a['content']); return $a; }, $rows);
+    jsonResponse($rows);
+}
+
+function handleAttachmentDownload(string $id) {
+    $user = requirePermission('access_patient_records');
+    $row = dbGetById('attachments', $id);
+    if (!$row) {
+        jsonResponse(['error' => 'Not found'], 404);
+    }
+    $binary = base64_decode((string)($row['content'] ?? ''), true);
+    if ($binary === false) {
+        jsonResponse(['error' => 'Stored file is unreadable'], 500);
+    }
+    dbLogAudit($user, 'attachment.downloaded', 'attachments', $id, ['fileName' => $row['fileName'] ?? '']);
+    header('Content-Type: ' . ($row['mimeType'] ?: 'application/octet-stream'));
+    header('Content-Length: ' . strlen($binary));
+    header('Content-Disposition: attachment; filename="' . str_replace('"', '', (string)($row['fileName'] ?? 'attachment')) . '"');
+    header('X-Content-Type-Options: nosniff');
+    echo $binary;
+    exit;
+}
 function handleVisitCreate(array $input, array $user) {
     $date = trim((string)($input['date'] ?? '')) ?: date('Y-m-d');
     if (trim((string)($input['queueNo'] ?? '')) === '') {
@@ -1023,6 +1118,10 @@ try {
         jsonResponse(handleTwoFactorConfirm(requireAuth()));
     } elseif ($path === '/2fa/disable') {
         jsonResponse(handleTwoFactorDisable(requireAuth()));
+    } elseif (preg_match('#^/attachments/record/(.+)$#', $path, $rm)) {
+        handleAttachmentList(requirePermission('access_patient_records'), $rm[1]);
+    } elseif (preg_match('#^/attachments/([A-Za-z0-9]+)/download$#', $path, $dm)) {
+        handleAttachmentDownload($dm[1]);
     } elseif ($path === '/verifyCertificate') {
         handleVerifyCertificate();
     } elseif ($path === '/dashboard') {
@@ -1119,10 +1218,16 @@ try {
         $table = $resourceMap[$resource];
         switch ($method) {
             case 'GET':
-                handleResourceList($table, $user);
+                if ($resource === 'attachments') {
+                    handleAttachmentList($user);
+                } else {
+                    handleResourceList($table, $user);
+                }
                 break;
             case 'POST':
-                if ($resource === 'dispensing') {
+                if ($resource === 'attachments') {
+                    handleAttachmentCreate($input, $user);
+                } elseif ($resource === 'dispensing') {
                     handleDispenseCreate($input, $user);
                 } elseif ($resource === 'employeeMedicine') {
                     handleEmployeeDispenseCreate($input, $user);

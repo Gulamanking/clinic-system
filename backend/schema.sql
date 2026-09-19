@@ -366,3 +366,16 @@ CREATE TABLE IF NOT EXISTS ai_requests (
   ip_address TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS attachments (
+  id VARCHAR(48) PRIMARY KEY,
+  recordtype TEXT NOT NULL DEFAULT '',
+  recordid TEXT NOT NULL DEFAULT '',
+  filename TEXT NOT NULL DEFAULT '',
+  mimetype TEXT NOT NULL DEFAULT '',
+  sizebytes BIGINT NOT NULL DEFAULT 0,
+  content TEXT NOT NULL,
+  uploadedby TEXT NOT NULL DEFAULT '',
+  created_at BIGINT NOT NULL DEFAULT 0
+);
+

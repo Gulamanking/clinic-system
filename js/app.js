@@ -455,6 +455,39 @@ function renderPatientLinkSelector(key, ms) {
     '</div>';
 }
 
+// Spec Module 1: PDF and image attachments on a medical record. Stored in the
+// database rather than on disk so they survive a redeploy.
+function renderAttachmentsSection(key, record, ms) {
+  var body;
+  if (ms.attachments === null) {
+    body = '<p class="text-xs" style="color:#7A7A7A">Loading attachments\u2026</p>';
+  } else if (!ms.attachments.length) {
+    body = '<p class="text-xs" style="color:#7A7A7A">No documents attached yet.</p>';
+  } else {
+    body = ms.attachments.map(function(a) {
+      var kb = Math.max(1, Math.round((a.sizeBytes || 0) / 1024));
+      return '<div class="flex items-center justify-between gap-2 rounded-lg p-2" style="background:#FDF6F8">' +
+        '<div class="min-w-0">' +
+        '<p class="truncate text-xs" style="color:#2B2B2B">' + esc(a.fileName || 'attachment') + '</p>' +
+        '<p class="text-[10px]" style="color:#7A7A7A">' + esc(a.mimeType || '') + ' \u00b7 ' + kb + ' KB</p>' +
+        '</div>' +
+        '<div class="flex shrink-0 gap-1">' +
+        '<button type="button" data-attachment-download="' + esc(a.id) + '" data-file-name="' + esc(a.fileName || '') + '" class="rounded px-2 py-1 text-[10px] font-medium text-white" style="background:#2563EB">Download</button>' +
+        '<button type="button" data-attachment-delete="' + esc(a.id) + '" class="rounded px-2 py-1 text-[10px] font-medium text-white" style="background:#C13030">Delete</button>' +
+        '</div></div>';
+    }).join('');
+  }
+  return '<div class="border-t px-6 py-4" style="border-color:#E8D4DB">' +
+    '<div class="mb-2 flex items-center justify-between">' +
+    '<h4 class="text-xs font-semibold" style="color:#2B2B2B">Attachments</h4>' +
+    '<span class="text-[10px]" style="color:#7A7A7A">PDF, PNG, JPEG or WebP \u00b7 max 5MB</span>' +
+    '</div>' +
+    '<div class="space-y-2">' + body + '</div>' +
+    '<input type="file" data-attachment-upload="' + esc(key) + '" data-record-id="' + esc(record.id) + '" accept="application/pdf,image/png,image/jpeg,image/webp" class="mt-3 w-full text-xs" />' +
+    (ms.attachmentError ? '<p class="mt-2 text-[11px]" style="color:#C13030">' + esc(ms.attachmentError) + '</p>' : '') +
+    '</div>';
+}
+
 /* ============================== MODAL ============================== */
 function renderModal(title, content, wide) {
   var w = wide ? 'max-w-2xl' : 'max-w-md';
@@ -3486,6 +3519,18 @@ function renderCrudModule(key) {
           renderMainContent();
         });
       }
+      // Keyed to the record being viewed, not cached once per module. Caching
+      // per module is what left the visit patient list showing stale data, and
+      // here it would show one student's documents under another's name.
+      var supportsAttachments = key === 'students' || key === 'medicalRecords';
+      if (supportsAttachments && ms.attachmentsFor !== ms.viewTarget) {
+        ms.attachmentsFor = ms.viewTarget;
+        ms.attachments = null;
+        API.listAttachments(ms.viewTarget).then(function(list) {
+          ms.attachments = list || [];
+          renderMainContent();
+        }).catch(function() { ms.attachments = []; renderMainContent(); });
+      }
       var isProgram = key === 'programs';
       if (isProgram && typeof ms.allParticipants === 'undefined') {
         ms.allParticipants = null;
@@ -3518,6 +3563,7 @@ function renderCrudModule(key) {
         }).join('') +
         '</div>' +
         (isIncident ? renderEmergencyTreatmentSection(v, ms) : '') +
+        (supportsAttachments ? renderAttachmentsSection(key, v, ms) : '') +
         (isStaff ? renderEmployeeHealthSection(v, ms) : '') +
         (isStaff ? renderEmployeeVisitMedicineSection(v, ms) : '') +
         (isProgram ? renderProgramMonitoringSection(v, ms) : '') +
@@ -3757,6 +3803,29 @@ function initDashboardChart() {
 /* ============================== EVENT HANDLING ============================== */
 function setupEvents() {
   document.addEventListener('click', function(e) {
+    var attDownload = e.target.closest('[data-attachment-download]');
+    if (attDownload) {
+      e.preventDefault();
+      API.downloadAttachment(attDownload.getAttribute('data-attachment-download'),
+        attDownload.getAttribute('data-file-name'))
+        .catch(function(err) { showToast((err && err.message) || 'Download failed.', 'error'); });
+      return;
+    }
+
+    var attDelete = e.target.closest('[data-attachment-delete]');
+    if (attDelete) {
+      e.preventDefault();
+      var delMs = getModuleState(state.currentView);
+      API.deleteAttachment(attDelete.getAttribute('data-attachment-delete')).then(function() {
+        delMs.attachmentsFor = null;
+        renderMainContent();
+        showToast('Attachment deleted', 'success');
+      }).catch(function(err) {
+        showToast((err && err.message) || 'Could not delete the attachment.', 'error');
+      });
+      return;
+    }
+
     var target = e.target.closest('[data-nav]');
     if (target) {
       e.preventDefault();
@@ -4536,6 +4605,26 @@ function setupEvents() {
   /* Filter change events */
   document.addEventListener('change', function(e) {
     var target = e.target;
+
+    if (target.matches('[data-attachment-upload]')) {
+      var upKey = target.getAttribute('data-attachment-upload');
+      var upRecordId = target.getAttribute('data-record-id');
+      var upMs = getModuleState(upKey);
+      var chosen = target.files && target.files[0];
+      if (!chosen) return;
+      upMs.attachmentError = '';
+      var recordType = upKey === 'students' ? 'student' : 'medicalRecord';
+      API.uploadAttachment(recordType, upRecordId, chosen).then(function() {
+        // Force the keyed cache to miss so the list reflects the new file.
+        upMs.attachmentsFor = null;
+        renderMainContent();
+        showToast('Attached ' + chosen.name, 'success');
+      }).catch(function(err) {
+        upMs.attachmentError = (err && err.message) || 'Upload failed.';
+        renderMainContent();
+      });
+      return;
+    }
 
     if (target.matches('[data-patient-select]')) {
       var linkKey = target.getAttribute('data-patient-select');

@@ -183,5 +183,53 @@ const API = (function () {
     getClinicTrends() {
       return get('/api/insights/trends');
     },
+
+    listAttachments(recordId) {
+      // Filtered by path, not a query string: every request is sent as
+      // ?route=<path>, so a second '?' never reaches the server as $_GET.
+      return get('/attachments/record/' + encodeURIComponent(recordId));
+    },
+
+    uploadAttachment(recordType, recordId, file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onerror = function() { reject(new Error('Could not read ' + file.name)); };
+        reader.onload = function() {
+          post('/api/attachments', {
+            recordType: recordType,
+            recordId: recordId,
+            fileName: file.name,
+            mimeType: file.type,
+            data: String(reader.result),
+          }).then(resolve, reject);
+        };
+        reader.readAsDataURL(file);
+      });
+    },
+
+    deleteAttachment(id) {
+      return del('/api/attachments/' + encodeURIComponent(id));
+    },
+
+    // Downloads cannot be a plain link: the endpoint needs the bearer token,
+    // so fetch the bytes and hand the browser a blob instead.
+    async downloadAttachment(id, fileName) {
+      var url = getBaseUrl() + (getBaseUrl().indexOf('?') !== -1 ? '&' : '?') +
+        'route=' + encodeURIComponent('/attachments/' + id + '/download');
+      var headers = {};
+      var token = getToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      var res = await fetch(url, { headers: headers });
+      if (!res.ok) throw new Error('Download failed with status ' + res.status);
+      var blob = await res.blob();
+      var objectUrl = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = fileName || 'attachment';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    },
   };
 })();

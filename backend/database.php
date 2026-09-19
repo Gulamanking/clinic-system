@@ -21,6 +21,12 @@ function dbKeyMap(): array {
         // medicine
         'reorderLevel' => 'reorderlevel',
         'expiryDate' => 'expirydate',
+        // attachments
+        'recordType' => 'recordtype',
+        'fileName' => 'filename',
+        'mimeType' => 'mimetype',
+        'sizeBytes' => 'sizebytes',
+        'uploadedBy' => 'uploadedby',
         'batchNumber' => 'batchnumber',
         // students (demographics for the Module 9 age/gender analytics)
         'birthDate' => 'birthdate',
@@ -549,6 +555,7 @@ function getAllowedColumns(string $table): array {
         'assessment' => ['id', 'program_id', 'participant_id', 'result', 'remarks', 'assessed_by', 'created_at'],
         'doctor_schedule' => ['id', 'doctor_id', 'date', 'available_time', 'status', 'created_at'],
         'privacy_consents' => ['id', 'subject_id', 'subject_name', 'subject_type', 'consent_type', 'status', 'granted_at', 'notes', 'created_at'],
+        'attachments' => ['id', 'recordtype', 'recordid', 'filename', 'mimetype', 'sizebytes', 'content', 'uploadedby', 'created_at'],
         'roles' => ['id', 'name', 'description', 'is_self_service', 'created_at'],
     ];
     return $columns[$table] ?? [];
