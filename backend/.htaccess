@@ -3,12 +3,15 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
 
-# CORS (requires mod_headers; skip silently if unavailable)
-<IfModule mod_headers.c>
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
-</IfModule>
+# CORS is handled in index.php, which honours the ALLOWED_ORIGINS setting.
+# It used to be set here too, but `Header always set` overrides whatever PHP
+# sends, which would pin the response to "*" and undo that allow-list.
 
 RewriteCond %{REQUEST_METHOD} OPTIONS
 RewriteRule ^(.*)$ $1 [R=200,L]
+
+# The SQLite databases and the config files are only ever read by PHP; never
+# serve them over HTTP.
+<FilesMatch "\.(sqlite|sqlite3|db)$|^clinic_system$|^config\.(local|secret)\.php$">
+    Require all denied
+</FilesMatch>

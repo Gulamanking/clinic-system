@@ -9,3 +9,6 @@ archive/
 public/records/
 backend/config.secret.php
 /Proposed Design For Login
+backend/clinic_system
+backend/*.sqlite
+backend/*.sqlite3

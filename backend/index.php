@@ -1,7 +1,24 @@
 <?php
 
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/gemini.php';
+require_once __DIR__ . '/insights.php';
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+
+// CORS. Echo the caller's origin back only when it is on the configured
+// allow-list, so a production deployment can be locked to its own domain
+// (ALLOWED_ORIGINS) while local development keeps the permissive default.
+$corsAllowed = array_map('trim', explode(',', getConfig()['allowed_origins']));
+$corsOrigin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+if (in_array('*', $corsAllowed, true)) {
+    header('Access-Control-Allow-Origin: *');
+} elseif ($corsOrigin !== '' && in_array($corsOrigin, $corsAllowed, true)) {
+    header('Access-Control-Allow-Origin: ' . $corsOrigin);
+    header('Vary: Origin');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
@@ -9,12 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
-
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/database.php';
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/gemini.php';
-require_once __DIR__ . '/insights.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -856,7 +867,7 @@ try {
                 'id' => $id,
                 'fullname' => 'Nurse Admin',
                 'username' => 'admin',
-                'password' => password_hash('admin123', PASSWORD_BCRYPT),
+                'password' => password_hash(getConfig()['admin_password'], PASSWORD_BCRYPT),
                 'role' => 'Clinic Administrator',
                 'status' => 'Active',
             ]);

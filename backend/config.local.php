@@ -8,16 +8,19 @@
 // that should apply to everyone (e.g. a schema-affecting default), not
 // personal/experimental overrides.
 //
+// These are development values only. In production, environment variables
+// override everything in this file (see config.php), so a deployed copy of
+// this file is inert — do not add production credentials here.
+//
 // Real secrets (API keys) do NOT belong here — put those in
 // backend/config.secret.php instead (gitignored; copy config.secret.example.php
 // to create it). Anything set in this file overrides config.php's defaults;
-// config.secret.php overrides both.
-return[
+// config.secret.php overrides both; the environment overrides all three.
+return [
     'db_driver' => 'mysql',
     'db_host' => '127.0.0.1',
     'db_port' => '3306',
     'db_name' => 'clinic_system',
     'db_user' => 'root',
     'db_password' => '',
-    'jwt_secret' => 'clinic-system-jwt-secret-change-in-production',
 ];
