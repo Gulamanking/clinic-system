@@ -598,7 +598,6 @@ function renderLoginScreen() {
     '<div id="login-info" class="hidden text-xs" style="color:#5A4A62"></div>' +
     '<button type="submit" id="login-submit" class="w-full rounded-lg py-2.5 text-sm font-semibold text-white disabled:opacity-60" style="background:#7B1028;hover:background:#8A2346">Sign In</button>' +
     '</form>' +
-    '<p class="mt-6 text-center text-[11px]" style="color:#5A4A62">Demo login &mdash; Username: <span class="font-medium">admin</span> &middot; Password: <span class="font-medium">admin123</span></p>' +
     '<p class="mt-2 text-center text-[11px]" style="color:#B8B0BC">&copy; 2025 School Clinic Management System. All rights reserved.</p>' +
     '</div>' +
 
