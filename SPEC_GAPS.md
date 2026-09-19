@@ -58,11 +58,13 @@ PDF, PNG, JPEG or WebP only.
 alone silently omits whoever was recorded in the other. The duplication is the
 underlying problem and is still worth normalising.
 
-**The permission catalog is seeded on demand.** `seedPermissions()` runs only
-through `POST /seed/permissions`. Until it does, `permissions` and
-`role_permissions` are empty and `hasPermission()` deliberately falls back to
-`getDefaultRolePermissions()` — rules are still enforced. The Role and
-Permission Matrix report says which of the two it is reporting.
+**The permission catalog seeds itself.** It used to require someone to
+remember `POST /seed/permissions`, and nobody did, so RBAC ran on the built-in
+fallback and the Role and Permission Matrix report had nothing to show.
+`hasPermission()` now seeds on first use. Worth knowing: seeding removes the
+pre-seed fail-open on `resource:write` checks, so any new write permission must
+be added to `seedPermissions()` and granted to a role, or it will 403 on a
+seeded install.
 
 **`getAllowedColumns()` filters writes silently.** A column added to the schema
 but not to that whitelist accepts a value, returns 201, and discards it with no
@@ -83,5 +85,3 @@ documents. All four are now included.
 Not spec gaps, but known weaknesses:
 
 - Normalise the duplicated allergy and condition storage.
-- Seed the permission catalog on the production database so RBAC is explicit
-  rather than relying on the built-in fallback.

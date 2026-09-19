@@ -323,9 +323,26 @@ function hasPermission(array $user, string $permission): bool {
     $catalog = dbGetAll('permissions');
 
     if (count($catalog) === 0) {
+        // Seed the catalog the first time it is needed rather than leaving the
+        // deployment on the built-in map forever. It used to require someone to
+        // remember POST /seed/permissions, and nobody did — so RBAC silently ran
+        // on defaults and the Role and Permission Matrix report had nothing to
+        // show. Idempotent, and a failure here must not lock anyone out, so the
+        // fallback below still applies if it does not work.
+        if (function_exists('seedPermissions')) {
+            try {
+                seedPermissions();
+                $catalog = dbGetAll('permissions');
+            } catch (Throwable $e) {
+                $catalog = [];
+            }
+        }
+    }
+
+    if (count($catalog) === 0) {
         // Per-resource write checks (e.g. 'students:write') didn't exist before this
         // RBAC upgrade — fail open on them pre-seed so existing installs aren't locked
-        // out until an admin runs /seed/permissions. Legacy flags still enforce.
+        // out until the catalog exists. Legacy flags still enforce.
         if (strpos($permission, ':') !== false) return true;
         $defaults = getDefaultRolePermissions();
         if (!isset($defaults[$role])) return false;

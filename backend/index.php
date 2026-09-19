@@ -1334,6 +1334,7 @@ function seedPermissions(): void {
         ['id' => 'perm_attendance_write', 'module' => 'attendance', 'action' => 'write', 'description' => 'Record health program attendance'],
         ['id' => 'perm_assessment_write', 'module' => 'assessment', 'action' => 'write', 'description' => 'Record health program assessment results'],
         ['id' => 'perm_clearance_write', 'module' => 'clearance', 'action' => 'write', 'description' => 'Create/update/delete clearances/certificates'],
+        ['id' => 'perm_attachments_write', 'module' => 'attachments', 'action' => 'write', 'description' => 'Upload and remove documents attached to a medical record'],
     ];
 
     $existingPerms = dbGetAll('permissions');
@@ -1346,14 +1347,14 @@ function seedPermissions(): void {
 
     // Matches the Role and Access Summary in the module design doc.
     $roleGrants = [
-        'Clinic Administrator' => ['manage_users', 'view_reports', 'use_ai_assistant', 'access_patient_records', 'students', 'medicalRecords', 'medicalHistory', 'visits', 'medicine', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance', 'privacyConsents'],
+        'Clinic Administrator' => ['manage_users', 'view_reports', 'use_ai_assistant', 'access_patient_records', 'students', 'medicalRecords', 'medicalHistory', 'visits', 'medicine', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance', 'privacyConsents', 'attachments'],
         // Module 4 (Appointment Scheduling), Module 5 (Incident/Emergency), Module 6
         // (Faculty & Staff Health), and Module 7 (Health Program Monitoring) all list
         // School Nurse and/or Physician as users per the design doc's Role and Access
         // Summary — grants added here to match (Module 4 lists Doctor, not Nurse).
-        'School Nurse' => ['view_reports', 'use_ai_assistant', 'access_patient_records', 'visits', 'medicalRecords', 'medicalHistory', 'dispensing', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance', 'privacyConsents'],
-        'Physician' => ['view_reports', 'use_ai_assistant', 'access_patient_records', 'visits', 'medicalRecords', 'medicalHistory', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance'],
-        'Staff Encoder' => ['view_reports', 'access_patient_records', 'students', 'visits', 'medicine', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'privacyConsents'],
+        'School Nurse' => ['view_reports', 'use_ai_assistant', 'access_patient_records', 'visits', 'medicalRecords', 'medicalHistory', 'dispensing', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance', 'privacyConsents', 'attachments'],
+        'Physician' => ['view_reports', 'use_ai_assistant', 'access_patient_records', 'visits', 'medicalRecords', 'medicalHistory', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'clearance', 'attachments'],
+        'Staff Encoder' => ['view_reports', 'access_patient_records', 'students', 'visits', 'medicine', 'dispensing', 'appointments', 'doctorSchedule', 'incidents', 'emergencyTreatment', 'staff', 'employeeMedicalRecord', 'employeeVisit', 'employeeMedicine', 'programs', 'participants', 'attendance', 'assessment', 'privacyConsents', 'attachments'],
         // New self-service roles (Module 4/6/8's "Student"/"Faculty and Staff" users).
         // Read access to their own records is enforced by row-level filtering in
         // handleResourceList/handleResourceGet (see ownerFilterFor()), not by a
