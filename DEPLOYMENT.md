@@ -130,23 +130,37 @@ Set the environment variables **before** redeploying. Deployments are labelled
 `production`; if `APP_ENV=production` reaches the container before the secrets
 do, the startup check will refuse to serve and return a 500.
 
-## Bump the asset version on every frontend deploy
+## The frontend cache buster
 
-`index.html` and `enrollment.html` load the JavaScript with a `?v=NN` query
-string:
+`index.html` and `enrollment.html` load the JavaScript with a `?v=` query
+string. The host serves `js/*.js` with `Cache-Control: public,
+max-age=2592000, immutable`, and `immutable` means the browser will not
+revalidate for thirty days — an ordinary refresh does not help, only a hard
+reload. The only thing that makes a browser fetch the new file is the URL
+changing.
 
-```html
-<script src="js/api.js?v=39"></script>
-<script src="js/app.js?v=39"></script>
+That value is **not** a number anyone maintains. It is a hash of the contents
+of the scripts themselves, stamped by:
+
+```
+php tools/stamp-asset-version.php          # rewrite and report
+php tools/stamp-asset-version.php --check  # exit 1 if stale, write nothing
 ```
 
-The host serves those files with `Cache-Control: public, max-age=2592000,
-immutable`. `immutable` tells the browser the URL's content will never change,
-so it will not revalidate for thirty days — an ordinary refresh does not help,
-only a hard reload.
+It changes exactly when the JavaScript changes and never otherwise, so running
+it repeatedly is a no-op.
 
-**Increment `v` in both files whenever `js/app.js` or `js/api.js` changes.**
-Otherwise returning users keep running the old bundle and the deploy looks like
-it did nothing. This number sat at `38` from the first commit until September
-2026, so every JavaScript change before then only reached people who happened
-to hard-refresh.
+A `pre-commit` hook runs it automatically whenever `js/api.js` or `js/app.js`
+is part of a commit. Hooks are not copied by `git clone`, so **enable it once
+per clone**:
+
+```
+git config core.hooksPath .githooks
+```
+
+Without that the hook does not run and the version can go stale again. Use
+`--check` in CI if you want a hard guarantee.
+
+This is not hypothetical: the value sat at `38` from the first commit until
+September 2026, so every JavaScript change the project shipped reached only
+the people who happened to hard-reload.

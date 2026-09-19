@@ -1,0 +1,31 @@
+#!/bin/sh
+# Keeps the frontend cache buster honest. See tools/stamp-asset-version.php
+# for why a stale ?v= silently prevents a deploy from reaching anyone.
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+
+# Nothing to do unless the scripts themselves are part of this commit.
+if ! git diff --cached --name-only | grep -q '^js/\(api\|app\)\.js$'; then
+    exit 0
+fi
+
+# The stamper reads the working tree, so a partially staged script would be
+# hashed from the wrong content. Rare, but silently wrong, so refuse it.
+partial=$(git diff --name-only -- js/api.js js/app.js)
+if [ -n "$partial" ]; then
+    echo "pre-commit: js/*.js is only partially staged: $partial" >&2
+    echo "pre-commit: stage it fully or stash the rest, then commit again." >&2
+    exit 1
+fi
+
+# Re-staging these would sweep any unrelated unstaged edits into the commit.
+dirty=$(git diff --name-only -- index.html enrollment.html)
+if [ -n "$dirty" ]; then
+    echo "pre-commit: unstaged changes in: $dirty" >&2
+    echo "pre-commit: stage or stash them, then commit again." >&2
+    exit 1
+fi
+
+php tools/stamp-asset-version.php || exit 1
+git add -- index.html enrollment.html
