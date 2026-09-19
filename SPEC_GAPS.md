@@ -1,97 +1,87 @@
 # Spec gaps
 
 Differences between `Clinic_Management_System_Module_Design_Final.pdf` (the
-module design document, v1.0, August 2026) and what is actually built.
+module design document, v1.0, August 2026) and what is built.
 
-`IMPLEMENTATION_ROADMAP.md` is a log of work completed. This is the opposite:
-what the specification asks for that does not exist yet. Most items here were
-never claimed as done, so the two documents do not contradict each other.
+`IMPLEMENTATION_ROADMAP.md` is a log of work completed. This started as the
+opposite — what the specification asked for that did not exist. As of
+September 2026 every item has been closed; what follows is the record of what
+was missing and how each was resolved, plus the caveats worth knowing.
 
 Verified against `backend/schema_mysql.sql` and the module and report
-definitions in `js/app.js`. This audit covers whether a feature is *present*,
-not whether it *behaves correctly* — a working-looking feature with a broken
-handler will not show up here.
+definitions in `js/app.js`, and covered by `backend/tests/cases/`.
 
-## Still open
+## Closed
 
-### Not implemented at all
+### Features that did not exist
 
-| Spec item | Module | Notes |
+| Spec item | Module | Resolution |
 | --- | --- | --- |
-| PDF / image attachments on medical records | 1 (key feature) | No `$_FILES`, `move_uploaded_file` or base64 handling exists in the backend. The `record_folders` table groups records by folder name; it does not store files. |
-| Email / SMS appointment notification | 4 (key feature) | No mail or SMS sending anywhere in the codebase. |
-| Queue number | 2 (workflow step 3) | "System generates queue number" is a numbered step in the specified visit workflow. There is no column and no generation. |
-| Age and gender distribution analytics | 9 (key feature) | Cannot be built as the schema stands: `students` has neither a birthdate nor a gender column. Course distribution is possible; the other two are not. |
+| PDF / image attachments | 1 | `attachments` table, upload/list/download/delete endpoints, and an Attachments panel on the student and medical record views. Stored in the database, not on disk — see the caveat below. |
+| Email / SMS notification | 4 | SMTP sender configured by environment variables, fired on booking, confirmation and cancellation. SMS goes through an email-to-SMS gateway rather than a second provider. See DEPLOYMENT.md. |
+| Queue number | 2, workflow step 3 | Assigned per day on check-in, from the highest number currently held. |
+| Age and gender distribution | 9 | `students.gender` and `students.birthdate` added; age is computed at report time. |
 
-### Missing database fields
+### Fields that were missing
 
-| Table | Spec field | Status |
-| --- | --- | --- |
-| `students` | Section | Lives on `medicalrecords` and `medicalhistory` instead, duplicated per record rather than held once on the student. This is why section has to be passed between modules as a data attribute. |
-| `students` | Guardian | Only `emergencycontact` exists. Arguably equivalent, but the spec names Guardian. |
-| `visits` | Respiration, Height, Weight | Three of the six specified vital signs are absent. `temperature`, `bloodpressure` and `pulserate` exist. |
-| `visits` | Status | Only `disposition` exists, so the specified eight-step check-in to check-out lifecycle is not modelled. |
-| `medicine` | Supplier, batch details | Neither exists. Both appear in the spec under key features and in the Medicines table. |
+`students` gained `section`, `gender`, `birthdate` and `email`. `visits` gained
+`respiration`, `height` and `weight` — three of the six specified vital signs
+were absent — plus `status` and `queueno`. `medicine` gained `supplier` and
+`batchnumber`. `staff` gained `email`.
 
-### Missing clearance types
+Existing databases pick all of these up through the declarative migration map
+in `applyMigrations()`; there is no manual step.
 
-The spec lists six certificate types for Module 8. Two are not offered in
-`js/app.js` (`CLEARANCE_FIELDS`):
+### Clearance types
 
-- Fit-to-Study
-- OJT Clearance
+`Fit-to-Study` and `OJT Clearance` are now offered. "Fitness to Return" and
+"Health Certificate" already covered return-to-school and medical certificate
+under different names.
 
-"Fitness to Return" covers return-to-school and "Health Certificate" covers
-medical certificate, so those two are naming differences only.
+### Reports
 
-## Closed — reports (September 2026)
+Nine named reports had no implementation: Students with Allergies, Students
+with Asthma, Immunization Status, Medical Certificates (staff), Annual Report,
+User Activity Log, Role and Permission Matrix, Backup Status and Privacy
+Consent Status. Age, Gender and Strand Distribution were added alongside them.
 
-Nine reports named in the spec had no implementation. All are now derived in
-`handleReports()` and listed in the Reporting & Compliance view, and covered by
-`backend/tests/cases/08_reports.php`.
+## Caveats worth knowing
 
-| Report | Module | Derived from |
-| --- | --- | --- |
-| Students with Allergies | 1 | `students` merged with `medicalrecords` by student ID |
-| Students with Asthma | 1 | as above, matching `asthma` in medical conditions |
-| Immunization Status Report | 1 | as above; students with nothing on file read "No record" |
-| Medical Certificates | 6 | `clearance` rows belonging to staff rather than students |
-| Annual Report | 9 | year-to-date totals across visits, appointments, incidents, certificates and dispensing |
-| User Activity Log | 10 | per-user rollup of the audit trail |
-| Role and Permission Matrix | 10 | `permissions` + `role_permissions`, or the built-in defaults |
-| Backup Status | 10 | `backup.*` entries in the audit trail |
-| Privacy Consent Status | 10 | `privacy_consents` |
+**Attachments live in the database.** The application filesystem does not
+survive a redeploy on this host while the managed database does, so a scanned
+referral written to disk would disappear on the next deploy. The cost is that
+attachments inflate the database and every backup. Limits are 5MB per file and
+PDF, PNG, JPEG or WebP only.
 
-Two notes on those.
-
-**Allergies and conditions are stored twice** — on `students` and again on
+**Allergies and conditions are stored twice**, on `students` and again on
 `medicalrecords`. The reports merge by student ID, because reading either table
-alone silently omits whoever was recorded in the other. That duplication is the
-underlying problem and is worth normalising.
+alone silently omits whoever was recorded in the other. The duplication is the
+underlying problem and is still worth normalising.
 
-**The permission catalog is seeded on demand, not automatically.**
-`seedPermissions()` is reachable only through `POST /seed/permissions`. Until it
-runs, `permissions` and `role_permissions` are empty and `hasPermission()`
-deliberately falls back to `getDefaultRolePermissions()` — rules are still
-enforced. The matrix report therefore reports the built-in defaults when the
-catalog is empty, labelled as such, rather than showing an empty table while
-rules are actually in force.
+**The permission catalog is seeded on demand.** `seedPermissions()` runs only
+through `POST /seed/permissions`. Until it does, `permissions` and
+`role_permissions` are empty and `hasPermission()` deliberately falls back to
+`getDefaultRolePermissions()` — rules are still enforced. The Role and
+Permission Matrix report says which of the two it is reporting.
 
-## What matches the spec
+**`getAllowedColumns()` filters writes silently.** A column added to the schema
+but not to that whitelist accepts a value, returns 201, and discards it with no
+error. Any future column needs an entry in both places; the tests write and
+read back every field for this reason.
 
-Modules 2, 3, 5 and 7 track the specification closely, several with more
-reports than required. Module 10 is the most complete: two-factor
-authentication, account lockout via `failed_login_count` and `locked_until`,
-`ip_address` on audit logs, encryption at rest and consent tracking are all
-present. Every table the spec names exists.
+**Query strings do not reach the API.** Every request arrives as
+`?route=<path>`, so anything after a second `?` is never seen as `$_GET`.
+Filtered endpoints take their arguments as path segments.
 
-## Suggested order for what remains
+**Backups previously omitted four tables.** `privacy_consents`, `roles`,
+`record_folders` and `attachments` were not in `BACKUP_TABLES`, so a restore
+silently dropped consent records, custom roles, record folders and clinical
+documents. All four are now included.
 
-1. **One combined migration** rather than several: `students.section`,
-   `students.gender`, `students.birthdate`, `visits.respiration`,
-   `visits.height`, `visits.weight`, `visits.status`, `visits.queueno`,
-   `medicine.supplier`, `medicine.batch`. Adding gender and birthdate is what
-   unblocks the Module 9 analytics.
-2. **The two missing clearance types**, which are a one-line change.
-3. **Attachments and notifications**, scoped separately — each needs an
-   infrastructure decision (file storage, and an email or SMS provider).
+## Still worth doing
+
+Not spec gaps, but known weaknesses:
+
+- Normalise the duplicated allergy and condition storage.
+- Seed the permission catalog on the production database so RBAC is explicit
+  rather than relying on the built-in fallback.

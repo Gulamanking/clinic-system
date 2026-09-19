@@ -164,3 +164,40 @@ Without that the hook does not run and the version can go stale again. Use
 This is not hypothetical: the value sat at `38` from the first commit until
 September 2026, so every JavaScript change the project shipped reached only
 the people who happened to hard-reload.
+
+## Appointment notifications
+
+Spec Module 4 calls for email/SMS notification on booking, confirmation and
+cancellation. Mail is sent over SMTP from a socket rather than through PHP's
+`mail()`, which needs a local MTA that a container does not have.
+
+| Variable | Notes |
+| --- | --- |
+| `MAIL_HOST` | SMTP server. **Leaving this unset disables notifications**; the app still works. |
+| `MAIL_PORT` | Defaults to `587` |
+| `MAIL_USERNAME` | Omit for a server that does not authenticate |
+| `MAIL_PASSWORD` | Mark as **Secret** |
+| `MAIL_FROM` | Sender address. Required alongside `MAIL_HOST`. |
+| `MAIL_FROM_NAME` | Defaults to `School Clinic` |
+| `MAIL_ENCRYPTION` | `tls` (STARTTLS, the default), `ssl` (implicit), or `none` |
+| `SMS_GATEWAY_DOMAIN` | Optional. See below. |
+
+Notifications never block the clinic: a booking still succeeds when the mail
+server is unreachable or unconfigured, and every attempt is written to the
+audit trail as `notification.booked`, `notification.confirmed` or
+`notification.cancelled` with the per-recipient outcome. If notifications seem
+to be missing, that audit entry says exactly why — `not_configured`,
+`no_recipient_on_file`, `auth_failed` and so on.
+
+### SMS without a second provider
+
+Setting `SMS_GATEWAY_DOMAIN` to a carrier's email-to-SMS domain makes the
+patient's contact number a second recipient, addressed as
+`<digits>@<gateway>`. That covers the spec's SMS requirement through the same
+SMTP connection instead of a separate gateway account.
+
+### Recipients
+
+Notifications go to the `email` recorded on the student or staff member. A
+patient with no email on file produces a `no_recipient_on_file` audit entry
+rather than an error, so it is worth checking that field is being filled in.

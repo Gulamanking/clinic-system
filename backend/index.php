@@ -5,6 +5,7 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/gemini.php';
 require_once __DIR__ . '/insights.php';
+require_once __DIR__ . '/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -188,6 +189,12 @@ function handleResourceCreate(string $table, array $input, array $user) {
     $data = array_merge(['id' => $id], $input);
     $item = dbCreate($table, $data);
     dbLogAudit($user, 'create', $table, $item['id'] ?? $id);
+    if ($table === 'appointments') {
+        // Spec Module 4 step 8. Never allowed to fail the booking: sendMail()
+        // returns a reason instead of throwing, and an unconfigured mail server
+        // is recorded as skipped rather than treated as an error.
+        notifyAppointment($item, 'booked', $user);
+    }
     jsonResponse($item, 201);
 }
 
@@ -203,6 +210,15 @@ function handleResourceUpdate(string $table, string $id, array $input, array $us
     }
     $item = dbUpdate($table, $id, $input);
     dbLogAudit($user, 'update', $table, $id);
+    if ($table === 'appointments') {
+        // Only on a real transition, so editing a note does not re-notify.
+        $was = (string)($existing['status'] ?? '');
+        $now = (string)($item['status'] ?? '');
+        $events = ['Confirmed' => 'confirmed', 'Approved' => 'confirmed', 'Cancelled' => 'cancelled'];
+        if ($now !== $was && isset($events[$now])) {
+            notifyAppointment($item, $events[$now], $user);
+        }
+    }
     jsonResponse($item);
 }
 

@@ -214,6 +214,7 @@ function applyMigrations(PDO $pdo, string $driver): void {
             'section' => "TEXT NOT NULL DEFAULT ''",
             'gender' => "TEXT NOT NULL DEFAULT ''",
             'birthdate' => "TEXT NOT NULL DEFAULT ''",
+            'email' => "TEXT NOT NULL DEFAULT ''",
         ],
         'visits' => [
             'temperature' => "TEXT NOT NULL DEFAULT ''",
@@ -246,6 +247,9 @@ function applyMigrations(PDO $pdo, string $driver): void {
             'two_factor_secret' => "TEXT NOT NULL DEFAULT ''",
             'two_factor_enabled' => "INTEGER NOT NULL DEFAULT 0",
             'linked_record_id' => "TEXT NOT NULL DEFAULT ''",
+        ],
+        'staff' => [
+            'email' => "TEXT NOT NULL DEFAULT ''",
         ],
         'clearance' => [
             'qrcode' => "TEXT NOT NULL DEFAULT ''",
@@ -531,14 +535,14 @@ function dbGetById(string $table, string $id) {
 function getAllowedColumns(string $table): array {
     $columns = [
         'users' => ['id', 'fullname', 'username', 'password', 'role', 'status', 'failed_login_count', 'locked_until', 'last_login', 'two_factor_secret', 'two_factor_enabled', 'linked_record_id', 'created_at'],
-        'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'section', 'gender', 'birthdate', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
+        'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'section', 'gender', 'birthdate', 'email', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
         'medicalrecords' => ['id', 'recordid', 'status', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'allergies', 'medicalconditions', 'height', 'weight', 'vision', 'hearing', 'immunizationstatus', 'remarks', 'groupfolder', 'created_at'],
         'medicalhistory' => ['id', 'historyid', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'course', 'diagnosis', 'treatment', 'doctor', 'visitdate', 'created_at'],
         'visits' => ['id', 'patientname', 'patienttype', 'studentid', 'staffid', 'date', 'time', 'queueno', 'status', 'complaint', 'diagnosis', 'treatment', 'temperature', 'bloodpressure', 'pulserate', 'respiration', 'height', 'weight', 'assessment', 'medicinedispensed', 'nurseonduty', 'disposition', 'created_at'],
         'medicine' => ['id', 'name', 'category', 'stock', 'unit', 'expirydate', 'reorderlevel', 'supplier', 'batchnumber', 'created_at'],
         'appointments' => ['id', 'patientname', 'patienttype', 'studentid', 'staffid', 'doctor_id', 'date', 'time', 'type', 'status', 'notes', 'created_at'],
         'incidents' => ['id', 'caseno', 'date', 'personinvolved', 'location', 'description', 'severity', 'status', 'actiontaken', 'created_at'],
-        'staff' => ['id', 'name', 'department', 'position', 'bloodtype', 'healthnotes', 'lastcheckup', 'contactnumber', 'created_at'],
+        'staff' => ['id', 'name', 'department', 'position', 'bloodtype', 'healthnotes', 'lastcheckup', 'contactnumber', 'email', 'created_at'],
         'programs' => ['id', 'name', 'category', 'startdate', 'enddate', 'targetparticipants', 'status', 'description', 'created_at'],
         'clearance' => ['id', 'name', 'persontype', 'studentid', 'staffid', 'clearancetype', 'dateissued', 'expirydate', 'status', 'issuedby', 'qrcode', 'created_at'],
         'audit_logs' => ['id', 'user_id', 'username', 'action', 'resource', 'resource_id', 'details', 'ip_address', 'created_at'],

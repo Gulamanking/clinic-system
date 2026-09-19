@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS students (
   section TEXT NOT NULL DEFAULT '',
   gender TEXT NOT NULL DEFAULT '',
   birthdate TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -195,6 +196,7 @@ CREATE TABLE IF NOT EXISTS staff (
   healthnotes TEXT NOT NULL DEFAULT '',
   lastcheckup TEXT NOT NULL DEFAULT '',
   contactnumber TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 

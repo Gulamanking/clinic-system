@@ -107,6 +107,7 @@ const STUDENT_FIELDS = [
   { name: 'allergies', label: 'Allergies', type: 'text' },
   { name: 'conditions', label: 'Medical Conditions', type: 'textarea' },
   { name: 'contactNumber', label: 'Contact Number', type: 'text' },
+  { name: 'email', label: 'Email', type: 'text' },
   { name: 'emergencyContact', label: 'Emergency Contact', type: 'text' },
 ];
 const VISIT_FIELDS = [

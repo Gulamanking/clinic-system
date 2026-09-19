@@ -26,6 +26,17 @@ function getConfig() {
         // Password for the bootstrap admin account created by /seed. The dev
         // default is fine locally; production must set ADMIN_PASSWORD.
         'admin_password' => 'admin123',
+        // Appointment notifications (spec Module 4). Unset means the app
+        // carries on and records the notification as skipped.
+        'mail_host' => '',
+        'mail_port' => '587',
+        'mail_username' => '',
+        'mail_password' => '',
+        'mail_from' => '',
+        'mail_from_name' => 'School Clinic',
+        'mail_encryption' => 'tls',
+        // Optional email-to-SMS gateway, e.g. sms.example-carrier.com
+        'sms_gateway_domain' => '',
         'gemini_api_key' => '',
         'gemini_model' => 'gemini-3.6-flash',
         'ai_rate_limit_max' => 10,
@@ -62,6 +73,14 @@ function getConfig() {
         'jwt_secret' => 'JWT_SECRET',
         'encryption_key' => 'ENCRYPTION_KEY',
         'admin_password' => 'ADMIN_PASSWORD',
+        'mail_host' => 'MAIL_HOST',
+        'mail_port' => 'MAIL_PORT',
+        'mail_username' => 'MAIL_USERNAME',
+        'mail_password' => 'MAIL_PASSWORD',
+        'mail_from' => 'MAIL_FROM',
+        'mail_from_name' => 'MAIL_FROM_NAME',
+        'mail_encryption' => 'MAIL_ENCRYPTION',
+        'sms_gateway_domain' => 'SMS_GATEWAY_DOMAIN',
         'gemini_api_key' => 'GEMINI_API_KEY',
         'gemini_model' => 'GEMINI_MODEL',
         'ai_rate_limit_max' => 'AI_RATE_LIMIT_MAX',
