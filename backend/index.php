@@ -129,6 +129,7 @@ function rowMatchesOwnerFilter(array $row, array $filter): bool {
 
 function handleResourceList(string $table, array $user) {
     $items = dbGetAll($table);
+    if ($table === 'users') { $items = array_map('redactUserRow', $items); }
     $filter = ownerFilterFor($table, $user);
     if ($filter) {
         $items = array_values(array_filter($items, fn($row) => rowMatchesOwnerFilter($row, $filter)));
@@ -139,6 +140,7 @@ function handleResourceList(string $table, array $user) {
 function handleResourceGet(string $table, string $id, array $user) {
     $item = dbGetById($table, $id);
     if (!$item) jsonResponse(['error' => 'Not found'], 404);
+    if ($table === 'users') { $item = redactUserRow($item); }
     $filter = ownerFilterFor($table, $user);
     if ($filter && !rowMatchesOwnerFilter($item, $filter)) {
         jsonResponse(['error' => 'Not found'], 404);
@@ -180,6 +182,18 @@ function autoLinkPatientRecord(string $table, array $data): array {
     return $data;
 }
 
+// Credentials must never leave the server. The users table carries the bcrypt
+// password hash, the TOTP shared secret and the hash of any live sign-in code;
+// the secret is the worst of the three, because anyone holding it can generate
+// another user's authenticator codes at will. None of it is needed by the UI.
+//
+// Backups deliberately still contain them — a restore has to reinstate working
+// logins — which is why /backup requires manage_users.
+function redactUserRow(array $row): array {
+    unset($row['password'], $row['twoFactorSecret'], $row['otpHash']);
+    return $row;
+}
+
 function handleResourceCreate(string $table, array $input, array $user) {
     if ($table === 'users' && isset($input['password']) && $input['password'] !== '') {
         $input['password'] = password_hash($input['password'], PASSWORD_BCRYPT);
@@ -189,6 +203,7 @@ function handleResourceCreate(string $table, array $input, array $user) {
     $data = array_merge(['id' => $id], $input);
     $item = dbCreate($table, $data);
     dbLogAudit($user, 'create', $table, $item['id'] ?? $id);
+    if ($table === 'users') { $item = redactUserRow($item); }
     if ($table === 'appointments') {
         // Spec Module 4 step 8. Never allowed to fail the booking: sendMail()
         // returns a reason instead of throwing, and an unconfigured mail server
@@ -210,6 +225,7 @@ function handleResourceUpdate(string $table, string $id, array $input, array $us
     }
     $item = dbUpdate($table, $id, $input);
     dbLogAudit($user, 'update', $table, $id);
+    if ($table === 'users') { $item = redactUserRow($item); }
     if ($table === 'appointments') {
         // Only on a real transition, so editing a note does not re-notify.
         $was = (string)($existing['status'] ?? '');

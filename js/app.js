@@ -244,6 +244,10 @@ const USER_FIELDS = [
   { name: 'password', label: 'Password', type: 'password', required: true, hideInTable: true },
   { name: 'role', label: 'Role', type: 'select', options: ['Clinic Administrator', 'School Nurse', 'Physician', 'Staff Encoder', 'Student', 'Faculty and Staff'] },
   { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
+  { name: 'email', label: 'Email', type: 'text' },
+  // totp = authenticator app (needs enrolment under Settings); email = a
+  // code sent at sign-in, which works as soon as an address is on file.
+  { name: 'twoFactorMethod', label: 'Two-Factor Method', type: 'select', options: ['totp', 'email'], hideInTable: true },
   { name: 'linkedRecordId', label: 'Linked Student/Staff Record ID', type: 'text', hideInTable: true },
 ];
 
@@ -667,7 +671,9 @@ function renderTwoFactorScreen() {
     '<div class="mb-6 flex flex-col items-center text-center">' +
     '<div class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background:#F0ECF2">' + icon('shield-check', 26, 'text-[#7B1028]') + '</div>' +
     '<h1 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Two-Factor Verification</h1>' +
-    '<p class="mt-2 text-sm" style="color:#5A4A62">Enter the 6-digit code from your authenticator app</p>' +
+    '<p class="mt-2 text-sm" style="color:#5A4A62">' + (state.pendingTwoFactorMethod === 'email'
+      ? 'Enter the 6-digit code we emailed to ' + esc(state.pendingTwoFactorSentTo || 'your address')
+      : 'Enter the 6-digit code from your authenticator app') + '</p>' +
     '</div>' +
     '<form id="twofactor-form" class="space-y-4">' +
     '<input id="twofactor-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="w-full rounded-lg border border-[#E8D4DB] py-2.5 px-3 text-center text-lg tracking-[0.5em] focus:border-[#7B1028] focus:outline-none focus:ring-2 focus:ring-[#C9A24E]/30" placeholder="000000" />' +
@@ -5274,6 +5280,8 @@ async function handleLoginSubmit() {
     var result = await API.login(username, password);
     if (result.needsTwoFactor) {
       state.pendingTwoFactor = result.tempToken;
+      state.pendingTwoFactorMethod = result.method || 'totp';
+      state.pendingTwoFactorSentTo = result.sentTo || '';
       render();
       return;
     }

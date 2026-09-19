@@ -2,6 +2,9 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/database.php';
+// The email one-time code path sends mail during login, so this file depends
+// on the mailer directly rather than relying on index.php having loaded it.
+require_once __DIR__ . '/mailer.php';
 
 function base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -153,10 +156,28 @@ function handleLogin(): array {
 
     dbUpdate('users', $found['id'], ['failedLoginCount' => 0, 'lockedUntil' => 0]);
 
+    // Email one-time code. Unlike the authenticator-app path this needs no
+    // enrolment step — there is no shared secret to establish — so it is on as
+    // soon as an administrator sets the method and the account has an address
+    // to send to. Without an address there is nowhere to send the code, and
+    // treating that as "2FA on" would lock the user out of their own account.
+    if (($found['twoFactorMethod'] ?? 'totp') === 'email' && trim((string)($found['email'] ?? '')) !== '') {
+        issueLoginOtp($found);
+        $tempToken = generateJWT(['sub' => $found['id'], 'pending2fa' => true, 'method' => 'email'], OTP_TTL_SECONDS);
+        dbLogAudit(['id' => $found['id'], 'username' => $found['username']], 'login.pending2fa', 'auth', $found['id'], ['method' => 'email']);
+        return [
+            'ok' => true,
+            'needsTwoFactor' => true,
+            'method' => 'email',
+            'sentTo' => maskEmail((string)$found['email']),
+            'tempToken' => $tempToken,
+        ];
+    }
+
     if ((int)($found['twoFactorEnabled'] ?? 0) === 1) {
-        $tempToken = generateJWT(['sub' => $found['id'], 'pending2fa' => true], 300);
-        dbLogAudit(['id' => $found['id'], 'username' => $found['username']], 'login.pending2fa', 'auth', $found['id']);
-        return ['ok' => true, 'needsTwoFactor' => true, 'tempToken' => $tempToken];
+        $tempToken = generateJWT(['sub' => $found['id'], 'pending2fa' => true, 'method' => 'totp'], 300);
+        dbLogAudit(['id' => $found['id'], 'username' => $found['username']], 'login.pending2fa', 'auth', $found['id'], ['method' => 'totp']);
+        return ['ok' => true, 'needsTwoFactor' => true, 'method' => 'totp', 'tempToken' => $tempToken];
     }
 
     return finishLogin($found, $nowMs);
@@ -199,7 +220,16 @@ function handleVerifyTwoFactor(): array {
     }
 
     $user = dbGetById('users', $payload['sub']);
-    if (!$user || (int)($user['twoFactorEnabled'] ?? 0) !== 1) {
+    if (!$user) {
+        http_response_code(401);
+        return ['ok' => false, 'message' => 'Your session expired. Please log in again.'];
+    }
+
+    if (($payload['method'] ?? 'totp') === 'email') {
+        return verifyLoginOtp($user, $code);
+    }
+
+    if ((int)($user['twoFactorEnabled'] ?? 0) !== 1) {
         http_response_code(401);
         return ['ok' => false, 'message' => 'Two-factor authentication is not set up for this account.'];
     }
@@ -210,6 +240,89 @@ function handleVerifyTwoFactor(): array {
         return ['ok' => false, 'message' => 'Invalid authentication code.'];
     }
 
+    return finishLogin($user);
+}
+
+const OTP_TTL_SECONDS = 600;
+const OTP_MAX_ATTEMPTS = 5;
+
+// Shows enough of the address to confirm it is the right inbox without
+// disclosing it to whoever is holding the password. The mask is a fixed width
+// rather than one star per character, so it does not give away how long the
+// local part is.
+function maskEmail(string $email): string {
+    $at = strpos($email, '@');
+    if ($at === false || $at < 1) return '';
+    $name = substr($email, 0, $at);
+    $domain = substr($email, $at);
+    $visible = mb_substr($name, 0, mb_strlen($name) > 2 ? 2 : 1);
+    return $visible . '*****' . $domain;
+}
+
+// Generates the code, stores only a hash of it, and mails it. The code itself
+// is never written to the database or the audit trail — anyone who could read
+// either would otherwise be able to complete a login.
+function issueLoginOtp(array $user): void {
+    $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $expires = (int)round(microtime(true) * 1000) + (OTP_TTL_SECONDS * 1000);
+    dbUpdate('users', $user['id'], [
+        'otpHash' => password_hash($code, PASSWORD_BCRYPT),
+        'otpExpiresAt' => $expires,
+        'otpAttempts' => 0,
+    ]);
+
+    $name = $user['fullName'] ?? $user['fullname'] ?? $user['username'];
+    $minutes = (int)(OTP_TTL_SECONDS / 60);
+    $text = "Hello $name,\n\nYour School Clinic sign-in code is $code.\n\n"
+        . "It expires in $minutes minutes. If you did not try to sign in, change your password.\n\nSchool Clinic";
+    $panel = '<p style="margin:0 0 6px 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A7A7A;">Your sign-in code</p>'
+        . '<p style="margin:0;font-family:Consolas,Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:.22em;color:#7B1028;">'
+        . $code . '</p>'
+        . '<p style="margin:8px 0 0 0;font-size:12px;color:#7A7A7A;">Expires in ' . $minutes . ' minutes.</p>';
+    $html = renderEmailHtml(
+        'Sign-in verification',
+        '<p style="margin:0;">Hello ' . htmlspecialchars((string)$name, ENT_QUOTES) . ',</p>'
+        . '<p style="margin:12px 0 0 0;">Enter this code to finish signing in to the School Clinic Management System.</p>',
+        $panel,
+        'If you did not try to sign in, someone may know your password — change it and tell your administrator.'
+    );
+
+    [$ok, $detail] = sendMail((string)$user['email'], 'Your School Clinic sign-in code', $text, $html);
+    dbLogAudit(['id' => $user['id'], 'username' => $user['username']], 'login.otp_sent', 'auth', $user['id'],
+        ['sent' => $ok, 'detail' => $detail]);
+}
+
+function verifyLoginOtp(array $user, string $code): array {
+    $nowMs = (int)round(microtime(true) * 1000);
+    $hash = (string)($user['otpHash'] ?? '');
+    $expires = (int)($user['otpExpiresAt'] ?? 0);
+    $attempts = (int)($user['otpAttempts'] ?? 0);
+
+    $reject = function (string $reason, string $message) use ($user) {
+        dbLogAudit(['id' => $user['id'], 'username' => $user['username']], 'login.failed', 'auth', $user['id'], ['reason' => $reason]);
+        http_response_code(401);
+        return ['ok' => false, 'message' => $message];
+    };
+
+    if ($hash === '' || $expires === 0) {
+        return $reject('no active otp', 'That code is no longer valid. Please sign in again.');
+    }
+    if ($nowMs > $expires) {
+        dbUpdate('users', $user['id'], ['otpHash' => '', 'otpExpiresAt' => 0, 'otpAttempts' => 0]);
+        return $reject('otp expired', 'That code has expired. Please sign in again.');
+    }
+    if ($attempts >= OTP_MAX_ATTEMPTS) {
+        // Burn the code rather than leaving it guessable for the rest of its life.
+        dbUpdate('users', $user['id'], ['otpHash' => '', 'otpExpiresAt' => 0, 'otpAttempts' => 0]);
+        return $reject('otp attempts exceeded', 'Too many incorrect codes. Please sign in again.');
+    }
+    if (!password_verify($code, $hash)) {
+        dbUpdate('users', $user['id'], ['otpAttempts' => $attempts + 1]);
+        return $reject('invalid otp', 'Invalid code. Please check your email and try again.');
+    }
+
+    // Single use: clear before issuing the session so a replay cannot follow.
+    dbUpdate('users', $user['id'], ['otpHash' => '', 'otpExpiresAt' => 0, 'otpAttempts' => 0]);
     return finishLogin($user);
 }
 

@@ -12,3 +12,8 @@ backend/config.secret.php
 backend/clinic_system
 backend/*.sqlite
 backend/*.sqlite3
+
+# Ad-hoc patch scripts written while editing; never part of the app.
+/.[a-z]*.php
+/.pdftext.txt
+/.rowcheck.yml

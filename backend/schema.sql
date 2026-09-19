@@ -14,6 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
   two_factor_secret TEXT NOT NULL DEFAULT '',
   two_factor_enabled INTEGER NOT NULL DEFAULT 0,
   linked_record_id TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  two_factor_method TEXT NOT NULL DEFAULT 'totp',
+  otp_hash TEXT NOT NULL DEFAULT '',
+  otp_expires_at BIGINTEGER NOT NULL DEFAULT 0,
+  otp_attempts INTEGER NOT NULL DEFAULT 0,
   created_at BIGINT NOT NULL DEFAULT 0
 );
 

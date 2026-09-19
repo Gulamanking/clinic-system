@@ -201,3 +201,41 @@ SMTP connection instead of a separate gateway account.
 Notifications go to the `email` recorded on the student or staff member. A
 patient with no email on file produces a `no_recipient_on_file` audit entry
 rather than an error, so it is worth checking that field is being filled in.
+
+## Email one-time codes at sign-in
+
+An account can be asked for a code emailed at sign-in instead of, or as well
+as, an authenticator app. Set it per user under **User Access Control**:
+
+- **Email** — the account needs an address on file. No enrolment step: there
+  is no shared secret to establish, so it applies from the next sign-in.
+- **Authenticator app** (`totp`) — unchanged, still enrolled from Settings.
+
+An account set to `email` with no address on file signs in with its password
+alone. That is deliberate: there would be nowhere to send the code, and
+treating it as protected would lock the user out of an account they hold the
+correct password for.
+
+Codes are six digits, valid for ten minutes, single-use, and invalidated after
+five wrong attempts. Only a hash is stored; the code appears in the email and
+nowhere else — not in the database, not in the audit trail. Sending is logged
+as `login.otp_sent` with the delivery outcome, and the address is masked to a
+fixed width (`ni*****@example.com`) wherever it is shown, so the mask does not
+reveal how long the address is.
+
+This depends on the mail settings above. **If mail is not configured, an
+account set to `email` cannot sign in** — the code is generated but never
+arrives. Configure SMTP first, confirm a notification sends, then switch
+accounts over.
+
+### Testing the mail path locally
+
+`backend/tests/smtp_sink.php` is a throwaway SMTP server that captures one
+message to a file, so the whole path can be exercised without sending
+anything:
+
+```
+php backend/tests/smtp_sink.php 2525 /tmp/mail.txt
+MAIL_HOST=127.0.0.1 MAIL_PORT=2525 MAIL_ENCRYPTION=none MAIL_FROM=clinic@test.local \
+  php -S 127.0.0.1:8099 -t . router.php
+```

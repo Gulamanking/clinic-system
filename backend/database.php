@@ -7,6 +7,10 @@ function dbKeyMap(): array {
     return [
         // users
         'fullName' => 'fullname',
+        'twoFactorMethod' => 'two_factor_method',
+        'otpHash' => 'otp_hash',
+        'otpExpiresAt' => 'otp_expires_at',
+        'otpAttempts' => 'otp_attempts',
         // students
         'studentId' => 'studentid',
         'staffId' => 'staffid',
@@ -247,6 +251,11 @@ function applyMigrations(PDO $pdo, string $driver): void {
             'two_factor_secret' => "TEXT NOT NULL DEFAULT ''",
             'two_factor_enabled' => "INTEGER NOT NULL DEFAULT 0",
             'linked_record_id' => "TEXT NOT NULL DEFAULT ''",
+            'email' => "TEXT NOT NULL DEFAULT ''",
+            'two_factor_method' => "TEXT NOT NULL DEFAULT 'totp'",
+            'otp_hash' => "TEXT NOT NULL DEFAULT ''",
+            'otp_expires_at' => "BIGINT NOT NULL DEFAULT 0",
+            'otp_attempts' => "INTEGER NOT NULL DEFAULT 0",
         ],
         'staff' => [
             'email' => "TEXT NOT NULL DEFAULT ''",
@@ -534,7 +543,7 @@ function dbGetById(string $table, string $id) {
 
 function getAllowedColumns(string $table): array {
     $columns = [
-        'users' => ['id', 'fullname', 'username', 'password', 'role', 'status', 'failed_login_count', 'locked_until', 'last_login', 'two_factor_secret', 'two_factor_enabled', 'linked_record_id', 'created_at'],
+        'users' => ['id', 'fullname', 'username', 'password', 'role', 'status', 'email', 'failed_login_count', 'locked_until', 'last_login', 'two_factor_secret', 'two_factor_enabled', 'two_factor_method', 'otp_hash', 'otp_expires_at', 'otp_attempts', 'linked_record_id', 'created_at'],
         'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'section', 'gender', 'birthdate', 'email', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
         'medicalrecords' => ['id', 'recordid', 'status', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'allergies', 'medicalconditions', 'height', 'weight', 'vision', 'hearing', 'immunizationstatus', 'remarks', 'groupfolder', 'created_at'],
         'medicalhistory' => ['id', 'historyid', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'course', 'diagnosis', 'treatment', 'doctor', 'visitdate', 'created_at'],
