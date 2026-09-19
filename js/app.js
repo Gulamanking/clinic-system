@@ -3260,8 +3260,8 @@ function renderCrudModule(key) {
       html += '<td class="px-4 py-3 text-right"><div class="flex justify-end gap-1">' +
         '<button type="button" data-view="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('eye', 13) + '</button>' +
         '<button type="button" data-edit="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Edit" onmouseenter="this.style.color=\'#C9A227\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('pencil', 13) + '</button>' +
-        (key === 'students' ? '<button type="button" data-view-medical-records="' + esc(item.studentId || item.id) + '" data-student-name="' + esc(item.name || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical Records" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('file-text', 13) + '</button><button type="button" data-create-medical-record="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Create Medical Record" onmouseenter="this.style.color=\'#8B5CF6\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('heart-plus', 13) + '</button>' : '') +
-        (key === 'medicalRecords' ? '<button type="button" data-view-medical-history="' + esc(item.id) + '" data-record-id="' + esc(item.recordId || '') + '" data-student-id="' + esc(item.studentId || '') + '" data-student-name="' + esc(item.studentName || '') + '" data-department="' + esc(item.department || '') + '" data-year-level="' + esc(item.yearLevel || '') + '" data-section="' + esc(item.section || '') + '" data-blood-type="' + esc(item.bloodType || '') + '" data-course="' + esc(item.course || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical History" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('history', 13) + '</button>' : '') +
+        (key === 'students' ? '<button type="button" data-view-medical-records="' + esc(item.studentId || item.id) + '" data-student-name="' + esc(item.name || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical Records" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('file-text', 13) + '</button><button type="button" data-create-medical-record="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Create Medical Record" onmouseenter="this.style.color=\'#8B5CF6\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('heart-plus', 13) + '</button><button type="button" data-view-medical-history data-student-id="' + esc(item.studentId || '') + '" data-student-name="' + esc(item.name || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical History" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('history', 13) + '</button>' : '') +
+        (key === 'medicalRecords' ? '<button type="button" data-view-medical-history data-student-id="' + esc(item.studentId || '') + '" data-student-name="' + esc(item.studentName || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="View Medical History" onmouseenter="this.style.color=\'#2563EB\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('history', 13) + '</button><button type="button" data-add-medical-history="' + esc(item.id) + '" data-student-id="' + esc(item.studentId || '') + '" data-student-name="' + esc(item.studentName || '') + '" data-department="' + esc(item.department || '') + '" data-year-level="' + esc(item.yearLevel || '') + '" data-section="' + esc(item.section || '') + '" data-blood-type="' + esc(item.bloodType || '') + '" data-course="' + esc(item.course || '') + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Add Medical History" onmouseenter="this.style.color=\'#8B5CF6\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('plus', 13) + '</button>' : '') +
         '<button type="button" data-delete="' + esc(item.id) + '" class="w-7 h-7 rounded flex items-center justify-center transition-colors" style="color:#7A7A7A" title="Delete" onmouseenter="this.style.color=\'#C13030\'" onmouseleave="this.style.color=\'#7A7A7A\'">' + icon('trash-2', 13) + '</button>' +
         '</div></td>';
       html += '</tr>';
@@ -3955,41 +3955,47 @@ function setupEvents() {
     target = e.target.closest('[data-view-medical-history]');
     if (target) {
       e.preventDefault();
-      var recordId = target.getAttribute('data-view-medical-history');
-      var recordDisplayId = target.getAttribute('data-record-id');
-      var studentId = target.getAttribute('data-student-id');
-      var studentName = target.getAttribute('data-student-name');
-      var department = target.getAttribute('data-department');
-      var yearLevel = target.getAttribute('data-year-level');
-      var section = target.getAttribute('data-section');
-      var bloodType = target.getAttribute('data-blood-type');
-      var course = target.getAttribute('data-course');
-      (async function() {
-        try {
-          var mms = getModuleState('medicalHistory');
-          // Don't set filters - show all records by default
-          mms.departmentFilter = 'All';
-          mms.yearLevelFilter = 'All';
-          mms.page = 1;
-          
-          // Open form to add new medical history entry for this student
-          openAddForm('medicalHistory');
-          mms.form.studentId = studentId || '';
-          mms.form.studentName = studentName || '';
-          mms.form.department = department || '';
-          mms.form.yearLevel = yearLevel || '';
-          mms.form.section = section || '';
-          mms.form.bloodType = bloodType || '';
-          mms.form.course = course || '';
-          
-          state.currentView = 'medicalHistory';
-          saveState();
-          renderMainContent();
-          showToast('Adding medical history for: ' + (studentName || 'Unknown'), 'success');
-        } catch (e) {
-          showToast('Error loading medical history', 'error');
-        }
-      })();
+      var mhStudentId = target.getAttribute('data-student-id') || '';
+      var mhStudentName = target.getAttribute('data-student-name') || '';
+      var mms = getModuleState('medicalHistory');
+      // Show this one student's entries. The module's searchKeys cover both
+      // studentId and studentName, so searching by ID filters the list and
+      // stays unambiguous when two students share a name; the name is a
+      // fallback for older rows saved without an ID. The other filters are
+      // cleared so a stale department or date filter cannot hide the results.
+      mms.departmentFilter = 'All';
+      mms.yearLevelFilter = 'All';
+      mms.dateFromFilter = '';
+      mms.dateToFilter = '';
+      mms.search = mhStudentId || mhStudentName;
+      mms.page = 1;
+      mms.modalOpen = false;
+      state.currentView = 'medicalHistory';
+      saveState();
+      renderMainContent();
+      showToast('Medical history for ' + (mhStudentName || mhStudentId || 'student'), 'success');
+      return;
+    }
+
+    target = e.target.closest('[data-add-medical-history]');
+    if (target) {
+      e.preventDefault();
+      var ams = getModuleState('medicalHistory');
+      ams.departmentFilter = 'All';
+      ams.yearLevelFilter = 'All';
+      ams.page = 1;
+      openAddForm('medicalHistory');
+      ams.form.studentId = target.getAttribute('data-student-id') || '';
+      ams.form.studentName = target.getAttribute('data-student-name') || '';
+      ams.form.department = target.getAttribute('data-department') || '';
+      ams.form.yearLevel = target.getAttribute('data-year-level') || '';
+      ams.form.section = target.getAttribute('data-section') || '';
+      ams.form.bloodType = target.getAttribute('data-blood-type') || '';
+      ams.form.course = target.getAttribute('data-course') || '';
+      state.currentView = 'medicalHistory';
+      saveState();
+      renderMainContent();
+      showToast('Adding medical history for: ' + (ams.form.studentName || 'Unknown'), 'success');
       return;
     }
 
