@@ -777,6 +777,12 @@ function renderSidebar() {
 var MODULE_LABELS = {};
 NAV_ITEMS.forEach(function(n) { MODULE_LABELS[n.key] = n.label; });
 MODULE_LABELS.dashboard = 'Dashboard';
+// Medical Records and Medical History appear in the sidebar but not in
+// NAV_ITEMS, which also drives a separate five-item quick nav — adding them
+// there would change that list. Label them directly instead, so the
+// breadcrumb stops falling back to "Dashboard" while either is on screen.
+MODULE_LABELS.medicalRecords = 'Medical Records';
+MODULE_LABELS.medicalHistory = 'Medical History';
 
 function renderTopbar() {
   var name = state.currentUser ? (state.currentUser.fullName || state.currentUser.username || 'U') : 'U';
