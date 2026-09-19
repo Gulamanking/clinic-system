@@ -3970,9 +3970,11 @@ function setupEvents() {
       mms.search = mhStudentId || mhStudentName;
       mms.page = 1;
       mms.modalOpen = false;
-      state.currentView = 'medicalHistory';
-      saveState();
-      renderMainContent();
+      // navigateTo, not a bare currentView assignment: it re-renders the
+      // chrome (breadcrumb, sidebar) and, crucially, calls loadModuleData.
+      // Setting the view by hand leaves ms.loading true forever, which shows
+      // as a spinner that never resolves.
+      navigateTo('medicalHistory');
       showToast('Medical history for ' + (mhStudentName || mhStudentId || 'student'), 'success');
       return;
     }
@@ -3980,22 +3982,28 @@ function setupEvents() {
     target = e.target.closest('[data-add-medical-history]');
     if (target) {
       e.preventDefault();
+      var addStudentId = target.getAttribute('data-student-id') || '';
+      var addStudentName = target.getAttribute('data-student-name') || '';
+      var addDepartment = target.getAttribute('data-department') || '';
+      var addYearLevel = target.getAttribute('data-year-level') || '';
+      var addSection = target.getAttribute('data-section') || '';
+      var addBloodType = target.getAttribute('data-blood-type') || '';
+      var addCourse = target.getAttribute('data-course') || '';
       var ams = getModuleState('medicalHistory');
       ams.departmentFilter = 'All';
       ams.yearLevelFilter = 'All';
       ams.page = 1;
+      navigateTo('medicalHistory');
       openAddForm('medicalHistory');
-      ams.form.studentId = target.getAttribute('data-student-id') || '';
-      ams.form.studentName = target.getAttribute('data-student-name') || '';
-      ams.form.department = target.getAttribute('data-department') || '';
-      ams.form.yearLevel = target.getAttribute('data-year-level') || '';
-      ams.form.section = target.getAttribute('data-section') || '';
-      ams.form.bloodType = target.getAttribute('data-blood-type') || '';
-      ams.form.course = target.getAttribute('data-course') || '';
-      state.currentView = 'medicalHistory';
-      saveState();
+      ams.form.studentId = addStudentId;
+      ams.form.studentName = addStudentName;
+      ams.form.department = addDepartment;
+      ams.form.yearLevel = addYearLevel;
+      ams.form.section = addSection;
+      ams.form.bloodType = addBloodType;
+      ams.form.course = addCourse;
       renderMainContent();
-      showToast('Adding medical history for: ' + (ams.form.studentName || 'Unknown'), 'success');
+      showToast('Adding medical history for: ' + (addStudentName || 'Unknown'), 'success');
       return;
     }
 
