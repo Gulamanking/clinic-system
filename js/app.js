@@ -3432,6 +3432,23 @@ function renderCrudModule(key) {
       '</select>' +
       '</div>' +
       '<div>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Section</label>' +
+      '<input type="text" name="section" value="' + esc(ms.enrollmentForm.section || '') + '" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB" placeholder="e.g., Rizal">' +
+      '</div>' +
+      '<div>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Gender</label>' +
+      '<select name="gender" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
+      '<option value="">Select gender</option>' +
+      '<option value="Female"' + (ms.enrollmentForm.gender === 'Female' ? ' selected' : '') + '>Female</option>' +
+      '<option value="Male"' + (ms.enrollmentForm.gender === 'Male' ? ' selected' : '') + '>Male</option>' +
+      '<option value="Prefer not to say"' + (ms.enrollmentForm.gender === 'Prefer not to say' ? ' selected' : '') + '>Prefer not to say</option>' +
+      '</select>' +
+      '</div>' +
+      '<div>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Date of Birth</label>' +
+      '<input type="date" name="birthDate" value="' + esc(ms.enrollmentForm.birthDate || '') + '" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB" placeholder="">' +
+      '</div>' +
+      '<div>' +
       '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Status</label>' +
       '<select name="status" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
       '<option value="Active"' + (ms.enrollmentForm.status === 'Active' ? ' selected' : '') + '>Active</option>' +
@@ -3476,6 +3493,10 @@ function renderCrudModule(key) {
       '<div>' +
       '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Emergency Contact</label>' +
       '<input type="text" name="emergencyContact" value="' + esc(ms.enrollmentForm.emergencyContact || '') + '" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB" placeholder="e.g., Maria Dela Cruz - 09179876543">' +
+      '</div>' +
+      '<div>' +
+      '<label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Email</label>' +
+      '<input type="email" name="email" value="' + esc(ms.enrollmentForm.email || '') + '" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB" placeholder="Where appointment notifications are sent">' +
       '</div>' +
       '</div></div>' +
       '</div>' +

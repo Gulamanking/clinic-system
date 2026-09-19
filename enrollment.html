@@ -159,6 +159,23 @@
                   <option value="Grade 12">Grade 12</option>
                 </select>
               </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: #5A4A62;">Section</label>
+                <input type="text" name="section" class="input-field w-full rounded-lg px-4 py-3 text-sm" placeholder="e.g., Rizal" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: #5A4A62;">Gender</label>
+                <select name="gender" class="input-field w-full rounded-lg px-4 py-3 text-sm">
+                  <option value="">Select gender</option>
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: #5A4A62;">Date of Birth</label>
+                <input type="date" name="birthDate" class="input-field w-full rounded-lg px-4 py-3 text-sm" />
+              </div>
             </div>
           </div>
 
@@ -216,8 +233,12 @@
               </div>
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: #5A4A62;">
-                  Emergency Contact
+                  Email
                 </label>
+                <input type="email" name="email" class="input-field w-full rounded-lg px-4 py-3 text-sm" placeholder="Where appointment notifications are sent" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: #5A4A62;">Emergency Contact</label>
                 <input type="text" name="emergencyContact"
                   class="input-field w-full rounded-lg px-4 py-3 text-sm"
                   placeholder="e.g., Maria Dela Cruz - 09179876543">
@@ -262,7 +283,7 @@
     </footer>
   </div>
 
-  <script src="js/api.js?v=c9418423b5"></script>
+  <script src="js/api.js?v=cb656cea9a"></script>
   <script>
     // Initialize Lucide icons
     lucide.createIcons();
