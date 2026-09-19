@@ -97,7 +97,7 @@ function canAccessView(key) {
 const STUDENT_FIELDS = [
   { name: 'name', label: 'Full Name', type: 'text', required: true },
   { name: 'studentId', label: 'Student ID', type: 'text', required: true },
-  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'Arts and Design', 'Sports', 'Other'] },
+  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'] },
   { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['Grade 11', 'Grade 12'] },
   { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'] },
@@ -138,8 +138,8 @@ const MEDICAL_RECORD_FIELDS = [
   { name: 'groupFolder', label: 'Group', type: 'select', required: true },
   { name: 'studentId', label: 'Student ID', type: 'text', required: true },
   { name: 'studentName', label: 'Student Name', type: 'text', required: true },
-  { name: 'department', label: 'Department', type: 'select', options: ['College of Engineering', 'College of Education', 'College of Arts & Sciences', 'College of Business', 'College of Nursing', 'College of IT', 'Senior High School', 'Junior High School', 'Elementary'] },
-  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] },
+  { name: 'department', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'] },
+  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['Grade 11', 'Grade 12'] },
   { name: 'section', label: 'Section', type: 'text' },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'] },
   { name: 'allergies', label: 'Allergies', type: 'textarea' },
@@ -205,11 +205,11 @@ const MEDICAL_HISTORY_FIELDS = [
   { name: 'historyId', label: 'History ID', type: 'text', required: true, hideInForm: true },
   { name: 'studentId', label: 'Student ID', type: 'text', required: true, hideInTable: true },
   { name: 'studentName', label: 'Student Name', type: 'text', required: true, hideInForm: true },
-  { name: 'department', label: 'Department', type: 'select', options: ['College of Engineering', 'College of Education', 'College of Arts & Sciences', 'College of Business', 'College of Nursing', 'College of IT', 'Senior High School', 'Junior High School', 'Elementary'], required: true },
-  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], required: true },
+  { name: 'department', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'], required: true },
+  { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['Grade 11', 'Grade 12'], required: true },
   { name: 'section', label: 'Section', type: 'text', required: true },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'], required: true },
-  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'Arts and Design', 'Sports', 'Other'], required: true },
+  { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'], required: true },
   { name: 'diagnosis', label: 'Diagnosis', type: 'textarea' },
   { name: 'treatment', label: 'Treatment', type: 'textarea' },
   { name: 'doctor', label: 'Doctor', type: 'text' },
@@ -1936,7 +1936,7 @@ function renderMedicalRecordsModule() {
     '</div>' +
     '<div class="flex items-center gap-2">' +
     '<select data-medical-dept-filter class="px-3 py-2 rounded-lg text-xs border border-[#DADADA] text-[#7A7A7A]" style="background:#FFFFFF">' +
-    ['All', 'College of Engineering', 'College of Education', 'College of Arts & Sciences', 'College of Business', 'College of Nursing', 'College of IT', 'Senior High School', 'Junior High School', 'Elementary'].map(function(o) {
+    ['All', 'STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'].map(function(o) {
       return '<option value="' + o + '"' + (deptFilter === o ? ' selected' : '') + '>' + o + '</option>';
     }).join('') +
     '</select>' +
@@ -2193,20 +2193,16 @@ function renderMedicalRecordsModule() {
       '<div><label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Year level</label>' +
       '<select name="yearLevel" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
       '<option value="">Select year level</option>' +
-      '<option value="1st Year"' + (gf.yearLevel === '1st Year' ? ' selected' : '') + '>1st Year</option>' +
-      '<option value="2nd Year"' + (gf.yearLevel === '2nd Year' ? ' selected' : '') + '>2nd Year</option>' +
-      '<option value="3rd Year"' + (gf.yearLevel === '3rd Year' ? ' selected' : '') + '>3rd Year</option>' +
-      '<option value="4th Year"' + (gf.yearLevel === '4th Year' ? ' selected' : '') + '>4th Year</option>' +
+      ['Grade 11', 'Grade 12'].map(function(o) {
+        return '<option value="' + o + '"' + (gf.yearLevel === o ? ' selected' : '') + '>' + o + '</option>';
+      }).join('') +
       '</select></div>' +
-      '<div class="sm:col-span-2"><label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Department</label>' +
+      '<div class="sm:col-span-2"><label class="mb-1 block text-xs font-medium" style="color:#5A4A62">Strand</label>' +
       '<select name="department" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color:#E8D4DB">' +
-      '<option value="">Select department</option>' +
-      '<option value="BSIT"' + (gf.department === 'BSIT' ? ' selected' : '') + '>BSIT</option>' +
-      '<option value="CTE"' + (gf.department === 'CTE' ? ' selected' : '') + '>CTE</option>' +
-      '<option value="BSCPE"' + (gf.department === 'BSCPE' ? ' selected' : '') + '>BSCPE</option>' +
-      '<option value="BSED"' + (gf.department === 'BSED' ? ' selected' : '') + '>BSED</option>' +
-      '<option value="Nursing"' + (gf.department === 'Nursing' ? ' selected' : '') + '>Nursing</option>' +
-      '<option value="Other"' + (gf.department === 'Other' ? ' selected' : '') + '>Other</option>' +
+      '<option value="">Select strand</option>' +
+      ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'].map(function(o) {
+        return '<option value="' + o + '"' + (gf.department === o ? ' selected' : '') + '>' + o + '</option>';
+      }).join('') +
       '</select></div>' +
       '</div>' +
       '<div class="mt-6 flex justify-end gap-2">' +
@@ -3062,7 +3058,7 @@ function renderCrudModule(key) {
     }
     // Handle yearLevel for medical history since it's not in all field definitions
     if (fieldName === 'yearLevel') {
-      return ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+      return ['Grade 11', 'Grade 12'];
     }
     return [];
   }
