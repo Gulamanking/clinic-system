@@ -3245,7 +3245,16 @@ function renderCrudModule(key) {
   if (ms.loading) {
     html += '<tr><td colspan="' + (columns.length + (dispensable ? 2 : 1)) + '" class="px-4 py-10 text-center">' + renderLoader('Loading records…', 32) + '</td></tr>';
   } else if (paginated.length === 0) {
-    html += '<tr><td colspan="' + (columns.length + (dispensable ? 2 : 1)) + '" class="px-4 py-10 text-center" style="color:#5A4A62">No records found. Click "Add New" to create one.</td></tr>';
+    // The two modules that hide the generic Add button need their own
+    // wording: pointing at a button that is not on screen just strands
+    // whoever is reading it. Medical History has no add control here at
+    // all — entries are started from a row in Medical Records.
+    var emptyHint = key === 'students'
+      ? 'No records found. Click "Enroll New Student" to add one.'
+      : key === 'medicalHistory'
+        ? 'No records found. Open Medical Records and use the + button on a student\'s row to add one.'
+        : 'No records found. Click "Add New" to create one.';
+    html += '<tr><td colspan="' + (columns.length + (dispensable ? 2 : 1)) + '" class="px-4 py-10 text-center" style="color:#5A4A62">' + esc(emptyHint) + '</td></tr>';
   } else {
     paginated.forEach(function(item) {
       var low = dispensable && Number(item.stock) <= Number(item.reorderLevel || 0);
