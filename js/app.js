@@ -99,6 +99,9 @@ const STUDENT_FIELDS = [
   { name: 'studentId', label: 'Student ID', type: 'text', required: true },
   { name: 'course', label: 'Strand', type: 'select', options: ['STEM', 'ABM', 'HUMSS', 'GAS', 'ICT'] },
   { name: 'yearLevel', label: 'Year Level', type: 'select', options: ['Grade 11', 'Grade 12'] },
+  { name: 'section', label: 'Section', type: 'text' },
+  { name: 'gender', label: 'Gender', type: 'select', options: ['Female', 'Male', 'Prefer not to say'] },
+  { name: 'birthDate', label: 'Date of Birth', type: 'date' },
   { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
   { name: 'bloodType', label: 'Blood Type', type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'] },
   { name: 'allergies', label: 'Allergies', type: 'text' },
@@ -113,12 +116,19 @@ const VISIT_FIELDS = [
   { name: 'staffId', label: 'Staff ID', type: 'hidden' },
   { name: 'date', label: 'Date', type: 'date', required: true },
   { name: 'time', label: 'Time', type: 'time' },
+  // Assigned by the server on check-in; read-only so staff can call
+  // patients in order without being able to edit the sequence.
+  { name: 'queueNo', label: 'Queue No.', type: 'text', readonly: true },
+  { name: 'status', label: 'Visit Status', type: 'select', options: ['Open', 'In Consultation', 'Completed', 'Cancelled'] },
   { name: 'complaint', label: 'Chief Complaint', type: 'text' },
   { name: 'diagnosis', label: 'Diagnosis', type: 'text' },
   { name: 'treatment', label: 'Treatment Given', type: 'textarea' },
   { name: 'temperature', label: 'Temperature (°C)', type: 'text' },
   { name: 'bloodPressure', label: 'Blood Pressure (mmHg)', type: 'text' },
   { name: 'pulseRate', label: 'Pulse Rate (bpm)', type: 'text' },
+  { name: 'respiration', label: 'Respiration (bpm)', type: 'text' },
+  { name: 'height', label: 'Height (cm)', type: 'text' },
+  { name: 'weight', label: 'Weight (kg)', type: 'text' },
   { name: 'assessment', label: 'Assessment', type: 'textarea' },
   { name: 'medicineDispensed', label: 'Medicine Dispensed', type: 'text' },
   { name: 'nurseOnDuty', label: 'Nurse on Duty', type: 'text' },
@@ -131,6 +141,8 @@ const MEDICINE_FIELDS = [
   { name: 'unit', label: 'Unit', type: 'select', options: ['tablets', 'bottles', 'boxes', 'pcs', 'ml'] },
   { name: 'expiryDate', label: 'Expiry Date', type: 'date' },
   { name: 'reorderLevel', label: 'Reorder Level', type: 'number' },
+  { name: 'supplier', label: 'Supplier', type: 'text' },
+  { name: 'batchNumber', label: 'Batch Number', type: 'text' },
 ];
 const MEDICAL_RECORD_FIELDS = [
   { name: 'recordId', label: 'Record ID', type: 'text', required: true },
@@ -195,7 +207,7 @@ const CLEARANCE_FIELDS = [
   { name: 'personType', label: 'Person Type', type: 'select', options: ['Student', 'Faculty/Staff'] },
   { name: 'studentId', label: 'Student ID', type: 'hidden' },
   { name: 'staffId', label: 'Staff ID', type: 'hidden' },
-  { name: 'clearanceType', label: 'Clearance Type', type: 'select', options: ['Medical Clearance', 'Fitness to Return', 'Sports Clearance', 'Health Certificate', 'Other'] },
+  { name: 'clearanceType', label: 'Clearance Type', type: 'select', options: ['Medical Clearance', 'Fit-to-Study', 'Fitness to Return', 'Sports Clearance', 'OJT Clearance', 'Health Certificate', 'Other'] },
   { name: 'dateIssued', label: 'Date Issued', type: 'date' },
   { name: 'expiryDate', label: 'Expiry Date', type: 'date' },
   { name: 'status', label: 'Status', type: 'select', options: ['Valid', 'Pending', 'Expired'] },
@@ -1253,6 +1265,9 @@ function renderReports() {
     { section: 'User Access & Confidentiality', label: 'Privacy Consent Status', key: 'privacyConsentStatus', filename: 'privacy_consent_status.csv' },
 
     { section: 'Reporting & Compliance', label: 'Annual Report', key: 'annualReport', filename: 'annual_report.csv' },
+    { section: 'Reporting & Compliance', label: 'Age Distribution', key: 'ageDistribution', filename: 'age_distribution.csv' },
+    { section: 'Reporting & Compliance', label: 'Gender Distribution', key: 'genderDistribution', filename: 'gender_distribution.csv' },
+    { section: 'Reporting & Compliance', label: 'Strand Distribution', key: 'courseDistribution', filename: 'strand_distribution.csv' },
   ];
 
   html += '<div class="overflow-hidden rounded-2xl border shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +

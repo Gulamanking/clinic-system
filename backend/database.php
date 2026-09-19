@@ -21,6 +21,11 @@ function dbKeyMap(): array {
         // medicine
         'reorderLevel' => 'reorderlevel',
         'expiryDate' => 'expirydate',
+        'batchNumber' => 'batchnumber',
+        // students (demographics for the Module 9 age/gender analytics)
+        'birthDate' => 'birthdate',
+        // visits
+        'queueNo' => 'queueno',
         // medical records
         'recordId' => 'recordid',
         'studentName' => 'studentname',
@@ -200,9 +205,17 @@ function applyMigrations(PDO $pdo, string $driver): void {
     $migrations = [
         'students' => [
             'status' => "TEXT NOT NULL DEFAULT 'Active'",
+            'section' => "TEXT NOT NULL DEFAULT ''",
+            'gender' => "TEXT NOT NULL DEFAULT ''",
+            'birthdate' => "TEXT NOT NULL DEFAULT ''",
         ],
         'visits' => [
             'temperature' => "TEXT NOT NULL DEFAULT ''",
+            'respiration' => "TEXT NOT NULL DEFAULT ''",
+            'height' => "TEXT NOT NULL DEFAULT ''",
+            'weight' => "TEXT NOT NULL DEFAULT ''",
+            'status' => "TEXT NOT NULL DEFAULT 'Open'",
+            'queueno' => "TEXT NOT NULL DEFAULT ''",
             'bloodpressure' => "TEXT NOT NULL DEFAULT ''",
             'pulserate' => "TEXT NOT NULL DEFAULT ''",
             'assessment' => "TEXT NOT NULL DEFAULT ''",
@@ -210,6 +223,10 @@ function applyMigrations(PDO $pdo, string $driver): void {
             'disposition' => "TEXT NOT NULL DEFAULT ''",
             'studentid' => "TEXT NOT NULL DEFAULT ''",
             'staffid' => "TEXT NOT NULL DEFAULT ''",
+        ],
+        'medicine' => [
+            'supplier' => "TEXT NOT NULL DEFAULT ''",
+            'batchnumber' => "TEXT NOT NULL DEFAULT ''",
         ],
         'appointments' => [
             'doctor_id' => "TEXT NOT NULL DEFAULT ''",
@@ -508,11 +525,11 @@ function dbGetById(string $table, string $id) {
 function getAllowedColumns(string $table): array {
     $columns = [
         'users' => ['id', 'fullname', 'username', 'password', 'role', 'status', 'failed_login_count', 'locked_until', 'last_login', 'two_factor_secret', 'two_factor_enabled', 'linked_record_id', 'created_at'],
-        'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
+        'students' => ['id', 'name', 'studentid', 'status', 'course', 'yearlevel', 'section', 'gender', 'birthdate', 'bloodtype', 'allergies', 'conditions', 'contactnumber', 'emergencycontact', 'created_at'],
         'medicalrecords' => ['id', 'recordid', 'status', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'allergies', 'medicalconditions', 'height', 'weight', 'vision', 'hearing', 'immunizationstatus', 'remarks', 'groupfolder', 'created_at'],
         'medicalhistory' => ['id', 'historyid', 'studentid', 'studentname', 'department', 'yearlevel', 'section', 'bloodtype', 'course', 'diagnosis', 'treatment', 'doctor', 'visitdate', 'created_at'],
-        'visits' => ['id', 'patientname', 'patienttype', 'studentid', 'staffid', 'date', 'time', 'complaint', 'diagnosis', 'treatment', 'temperature', 'bloodpressure', 'pulserate', 'assessment', 'medicinedispensed', 'nurseonduty', 'disposition', 'created_at'],
-        'medicine' => ['id', 'name', 'category', 'stock', 'unit', 'expirydate', 'reorderlevel', 'created_at'],
+        'visits' => ['id', 'patientname', 'patienttype', 'studentid', 'staffid', 'date', 'time', 'queueno', 'status', 'complaint', 'diagnosis', 'treatment', 'temperature', 'bloodpressure', 'pulserate', 'respiration', 'height', 'weight', 'assessment', 'medicinedispensed', 'nurseonduty', 'disposition', 'created_at'],
+        'medicine' => ['id', 'name', 'category', 'stock', 'unit', 'expirydate', 'reorderlevel', 'supplier', 'batchnumber', 'created_at'],
         'appointments' => ['id', 'patientname', 'patienttype', 'studentid', 'staffid', 'doctor_id', 'date', 'time', 'type', 'status', 'notes', 'created_at'],
         'incidents' => ['id', 'caseno', 'date', 'personinvolved', 'location', 'description', 'severity', 'status', 'actiontaken', 'created_at'],
         'staff' => ['id', 'name', 'department', 'position', 'bloodtype', 'healthnotes', 'lastcheckup', 'contactnumber', 'created_at'],

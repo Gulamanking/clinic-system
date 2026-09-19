@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS students (
   contactnumber TEXT NOT NULL DEFAULT '',
   emergencycontact TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'Active',
+  section TEXT NOT NULL DEFAULT '',
+  gender TEXT NOT NULL DEFAULT '',
+  birthdate TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -102,6 +105,11 @@ CREATE TABLE IF NOT EXISTS visits (
   medicinedispensed TEXT NOT NULL DEFAULT '',
   nurseonduty TEXT NOT NULL DEFAULT '',
   disposition TEXT NOT NULL DEFAULT '',
+  respiration TEXT NOT NULL DEFAULT '',
+  height TEXT NOT NULL DEFAULT '',
+  weight TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Open',
+  queueno TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 
@@ -113,6 +121,8 @@ CREATE TABLE IF NOT EXISTS medicine (
   unit TEXT NOT NULL DEFAULT '',
   expirydate TEXT NOT NULL DEFAULT '',
   reorderlevel INT NOT NULL DEFAULT 0,
+  supplier TEXT NOT NULL DEFAULT '',
+  batchnumber TEXT NOT NULL DEFAULT '',
   created_at BIGINT NOT NULL DEFAULT 0
 );
 

@@ -363,6 +363,39 @@ function handleReports() {
         ['metric' => 'Medicines dispensed', 'total' => $countInYear($data['dispensing'], 'dateReleased')],
     ];
 
+    // Module 9: demographic distribution. Age is computed from birthDate at
+    // report time rather than stored, so it cannot drift out of date.
+    $ageBands = ['Under 12' => 0, '12-14' => 0, '15-17' => 0, '18-20' => 0, '21 and over' => 0, 'Unknown' => 0];
+    $genderCounts = [];
+    $courseCounts = [];
+    $todayDt = new DateTime('today');
+    foreach ($data['students'] as $st) {
+        $born = trim((string)($st['birthDate'] ?? ''));
+        $band = 'Unknown';
+        if ($born !== '') {
+            try {
+                $age = (new DateTime($born))->diff($todayDt)->y;
+                if ($age < 12) $band = 'Under 12';
+                elseif ($age <= 14) $band = '12-14';
+                elseif ($age <= 17) $band = '15-17';
+                elseif ($age <= 20) $band = '18-20';
+                else $band = '21 and over';
+            } catch (Exception $e) {
+                // Unparseable date stays Unknown rather than failing the report.
+            }
+        }
+        $ageBands[$band]++;
+        $g = trim((string)($st['gender'] ?? '')) ?: 'Unspecified';
+        $genderCounts[$g] = ($genderCounts[$g] ?? 0) + 1;
+        $c = trim((string)($st['course'] ?? '')) ?: 'Unspecified';
+        $courseCounts[$c] = ($courseCounts[$c] ?? 0) + 1;
+    }
+    $data['ageDistribution'] = array_map(fn($band, $count) => ['ageBand' => $band, 'students' => $count], array_keys($ageBands), $ageBands);
+    arsort($genderCounts);
+    $data['genderDistribution'] = array_map(fn($g, $count) => ['gender' => $g, 'students' => $count], array_keys($genderCounts), $genderCounts);
+    arsort($courseCounts);
+    $data['courseDistribution'] = array_map(fn($c, $count) => ['strand' => $c, 'students' => $count], array_keys($courseCounts), $courseCounts);
+
     // Module 10: User Access & Confidentiality
     $catalog = dbGetAll('permissions');
     $matrix = [];
@@ -806,6 +839,30 @@ function certificateSignature(string $id, array $cert): string {
     return substr(hash_hmac('sha256', $payload, $cfg['jwt_secret']), 0, 16);
 }
 
+// Module 2 workflow step 3: "System generates queue number". Numbered per
+// day so patients can be called in arrival order, restarting each morning.
+// Derived from the highest number currently held for that day. Deleting a
+// visit frees its number to be reissued, which is deliberate: the queue
+// number is a call order, not an identifier, and a permanent gap would
+// leave staff calling 003 when 002 was never seen. The visit id stays
+// unique regardless.
+function handleVisitCreate(array $input, array $user) {
+    $date = trim((string)($input['date'] ?? '')) ?: date('Y-m-d');
+    if (trim((string)($input['queueNo'] ?? '')) === '') {
+        $highest = 0;
+        foreach (dbGetAll('visits') as $v) {
+            if (($v['date'] ?? '') !== $date) continue;
+            $n = (int)ltrim((string)($v['queueNo'] ?? ''), '0');
+            if ($n > $highest) $highest = $n;
+        }
+        $input['queueNo'] = str_pad((string)($highest + 1), 3, '0', STR_PAD_LEFT);
+    }
+    if (trim((string)($input['status'] ?? '')) === '') {
+        $input['status'] = 'Open';
+    }
+    handleResourceCreate('visits', $input, $user);
+}
+
 function handleClearanceCreate(array $input, array $user) {
     $id = $input['id'] ?? bin2hex(random_bytes(12));
     $input['id'] = $id;
@@ -1073,6 +1130,8 @@ try {
                     handleAppointmentCreate($input, $user);
                 } elseif ($resource === 'clearance') {
                     handleClearanceCreate($input, $user);
+                } elseif ($resource === 'visits') {
+                    handleVisitCreate($input, $user);
                 } else {
                     handleResourceCreate($table, $input, $user);
                 }
