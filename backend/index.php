@@ -304,6 +304,129 @@ function handleReports() {
     $data['issuedCertificates'] = array_values(array_filter($data['clearance'], fn($c) => in_array($c['status'] ?? '', ['Valid', 'Issued'], true)));
     $data['pendingCertificates'] = array_values(array_filter($data['clearance'], fn($c) => ($c['status'] ?? '') === 'Pending'));
 
+    // Module 1: Student Medical Records — allergy, asthma and immunisation
+    // reporting. Allergies and conditions are held on both students and
+    // medicalRecords, so merge by student ID: reading only one table would
+    // silently omit anyone whose details were recorded in the other.
+    $recordByStudent = [];
+    foreach ($data['medicalRecords'] as $r) {
+        $sid = trim((string)($r['studentId'] ?? ''));
+        if ($sid !== '') $recordByStudent[$sid] = $r;
+    }
+    $hasValue = function ($v): bool {
+        $v = strtolower(trim((string)$v));
+        return $v !== '' && !in_array($v, ['none', 'n/a', 'na', 'nil', 'no', 'wala', '-'], true);
+    };
+    $studentHealth = [];
+    foreach ($data['students'] as $s) {
+        $sid = trim((string)($s['studentId'] ?? ''));
+        $rec = $recordByStudent[$sid] ?? [];
+        $studentHealth[] = [
+            'studentId' => $sid,
+            'name' => $s['name'] ?? '',
+            'course' => $s['course'] ?? '',
+            'yearLevel' => $s['yearLevel'] ?? '',
+            'section' => $rec['section'] ?? '',
+            'bloodType' => $hasValue($s['bloodType'] ?? '') ? $s['bloodType'] : ($rec['bloodType'] ?? ''),
+            'allergies' => $hasValue($s['allergies'] ?? '') ? $s['allergies'] : ($rec['allergies'] ?? ''),
+            'medicalConditions' => $hasValue($s['conditions'] ?? '') ? $s['conditions'] : ($rec['medicalConditions'] ?? ''),
+            'immunizationStatus' => $rec['immunizationStatus'] ?? '',
+        ];
+    }
+    $data['studentsWithAllergies'] = array_values(array_filter($studentHealth, fn($s) => $hasValue($s['allergies'])));
+    $data['studentsWithAsthma'] = array_values(array_filter($studentHealth, fn($s) => stripos((string)$s['medicalConditions'], 'asthma') !== false));
+    // A status report has to list every student: "who has nothing on file" is
+    // the question it exists to answer, so an empty value becomes explicit.
+    $data['immunizationStatus'] = array_map(function ($s) use ($hasValue) {
+        $s['immunizationStatus'] = $hasValue($s['immunizationStatus']) ? $s['immunizationStatus'] : 'No record';
+        return $s;
+    }, $studentHealth);
+
+    // Module 6: Faculty & Staff Health Services — certificates issued to
+    // employees rather than students.
+    $data['staffMedicalCertificates'] = array_values(array_filter($data['clearance'], function ($c) {
+        $type = strtolower((string)($c['personType'] ?? ''));
+        return trim((string)($c['staffId'] ?? '')) !== ''
+            || str_contains($type, 'staff') || str_contains($type, 'faculty') || str_contains($type, 'employee');
+    }));
+
+    // Module 9: annual roll-up for the current calendar year.
+    $yearStart = date('Y') . '-01-01';
+    $countInYear = function (array $rows, string $field) use ($yearStart): int {
+        return count(array_filter($rows, fn($r) => ($r[$field] ?? '') >= $yearStart));
+    };
+    $data['annualReport'] = [
+        ['metric' => 'Clinic visits', 'total' => $countInYear($data['visits'], 'date')],
+        ['metric' => 'Appointments', 'total' => $countInYear($data['appointments'], 'date')],
+        ['metric' => 'Incidents', 'total' => $countInYear($data['incidents'], 'date')],
+        ['metric' => 'Certificates issued', 'total' => $countInYear($data['clearance'], 'dateIssued')],
+        ['metric' => 'Medicines dispensed', 'total' => $countInYear($data['dispensing'], 'dateReleased')],
+    ];
+
+    // Module 10: User Access & Confidentiality
+    $catalog = dbGetAll('permissions');
+    $matrix = [];
+    if (count($catalog) === 0) {
+        // hasPermission() falls back to the built-in map when the catalog has
+        // never been seeded, and still enforces it. Reporting an empty matrix
+        // here would say "no rules" while rules are actively in force, so
+        // report what is really being applied and label where it came from.
+        foreach (getDefaultRolePermissions() as $role => $perms) {
+            foreach ($perms as $perm) {
+                $parts = explode(':', $perm, 2);
+                $matrix[] = [
+                    'role' => $role,
+                    'module' => $parts[0],
+                    'action' => $parts[1] ?? '',
+                    'description' => 'Built-in default (permission catalog not seeded)',
+                ];
+            }
+        }
+    } else {
+        $permissionById = [];
+        foreach ($catalog as $p) { $permissionById[$p['id']] = $p; }
+        foreach (dbGetAll('role_permissions') as $rp) {
+            $perm = $permissionById[$rp['permissionId'] ?? ''] ?? null;
+            if (!$perm) continue;
+            $matrix[] = [
+                'role' => $rp['role'] ?? '',
+                'module' => $perm['module'] ?? '',
+                'action' => $perm['action'] ?? '',
+                'description' => $perm['description'] ?? '',
+            ];
+        }
+    }
+    usort($matrix, fn($a, $b) => [$a['role'], $a['module'], $a['action']] <=> [$b['role'], $b['module'], $b['action']]);
+    $data['rolePermissionMatrix'] = $matrix;
+
+    $data['privacyConsentStatus'] = dbGetAll('privacy_consents');
+
+    // There is no backups table: backup.created and backup.restored are
+    // written to the audit trail, so that is the record of what ran and when.
+    $data['backupStatus'] = array_values(array_filter(
+        $auditLogs,
+        fn($a) => str_starts_with((string)($a['action'] ?? ''), 'backup.')
+    ));
+
+    // Per-user activity summary. The spec lists this separately from Audit
+    // Trail, which stays the raw event-by-event dump.
+    $byUser = [];
+    foreach ($auditLogs as $a) {
+        $u = trim((string)($a['username'] ?? ''));
+        if ($u === '') $u = trim((string)($a['userId'] ?? '')) ?: 'unknown';
+        if (!isset($byUser[$u])) {
+            $byUser[$u] = ['user' => $u, 'actions' => 0, 'lastAction' => '', 'lastActivityAt' => 0];
+        }
+        $byUser[$u]['actions']++;
+        $ts = (int)($a['createdAt'] ?? 0);
+        if ($ts >= $byUser[$u]['lastActivityAt']) {
+            $byUser[$u]['lastActivityAt'] = $ts;
+            $byUser[$u]['lastAction'] = $a['action'] ?? '';
+        }
+    }
+    usort($byUser, fn($a, $b) => $b['actions'] <=> $a['actions']);
+    $data['userActivityLog'] = array_values($byUser);
+
     $lowStock = array_filter($data['medicine'], fn($m) => $m['stock'] <= $m['reorderLevel']);
     $openIncidents = array_filter($data['incidents'] ?? [], fn($i) => $i['status'] !== 'Resolved');
     $expiredClearance = array_filter($data['clearance'] ?? [], fn($c) => $c['status'] === 'Expired');

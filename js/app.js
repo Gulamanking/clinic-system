@@ -1193,6 +1193,9 @@ function renderReports() {
   var rows = [
     { section: 'Student Medical Records', label: 'Student Medical Profiles', key: 'students', filename: 'student_medical_records.csv' },
     { section: 'Student Medical Records', label: 'Medical History Report', key: 'medicalHistory', filename: 'medical_history.csv' },
+    { section: 'Student Medical Records', label: 'Students with Allergies', key: 'studentsWithAllergies', filename: 'students_with_allergies.csv' },
+    { section: 'Student Medical Records', label: 'Students with Asthma', key: 'studentsWithAsthma', filename: 'students_with_asthma.csv' },
+    { section: 'Student Medical Records', label: 'Immunization Status Report', key: 'immunizationStatus', filename: 'immunization_status.csv' },
 
     { section: 'Clinic Visit & Consultation', label: 'Daily Patients', key: 'dailyPatients', filename: 'daily_patients.csv' },
     { section: 'Clinic Visit & Consultation', label: 'Weekly Patients', key: 'weeklyPatients', filename: 'weekly_patients.csv' },
@@ -1223,6 +1226,7 @@ function renderReports() {
     { section: 'Faculty & Staff Health Services', label: 'Employee Health Summary', key: 'employeeMedicalRecord', filename: 'employee_health_summary.csv' },
     { section: 'Faculty & Staff Health Services', label: 'Employee Visits', key: 'employeeVisit', filename: 'employee_visits.csv' },
     { section: 'Faculty & Staff Health Services', label: 'Employee Medicine Dispensing', key: 'employeeMedicine', filename: 'employee_medicine.csv' },
+    { section: 'Faculty & Staff Health Services', label: 'Medical Certificates', key: 'staffMedicalCertificates', filename: 'staff_medical_certificates.csv' },
 
     { section: 'School Health Program Monitoring', label: 'Health Programs', key: 'programs', filename: 'health_programs.csv' },
     { section: 'School Health Program Monitoring', label: 'Student Participation', key: 'participants', filename: 'program_participants.csv' },
@@ -1237,6 +1241,12 @@ function renderReports() {
 
     { section: 'User Access & Confidentiality', label: 'Audit Trail', key: 'auditTrail', filename: 'audit_trail.csv' },
     { section: 'User Access & Confidentiality', label: 'Login Attempts', key: 'loginAttempts', filename: 'login_attempts.csv' },
+    { section: 'User Access & Confidentiality', label: 'User Activity Log', key: 'userActivityLog', filename: 'user_activity_log.csv' },
+    { section: 'User Access & Confidentiality', label: 'Role and Permission Matrix', key: 'rolePermissionMatrix', filename: 'role_permission_matrix.csv' },
+    { section: 'User Access & Confidentiality', label: 'Backup Status', key: 'backupStatus', filename: 'backup_status.csv' },
+    { section: 'User Access & Confidentiality', label: 'Privacy Consent Status', key: 'privacyConsentStatus', filename: 'privacy_consent_status.csv' },
+
+    { section: 'Reporting & Compliance', label: 'Annual Report', key: 'annualReport', filename: 'annual_report.csv' },
   ];
 
   html += '<div class="overflow-hidden rounded-2xl border shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
