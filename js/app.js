@@ -1353,6 +1353,126 @@ function renderReports() {
 }
 
 /* ============================== APPOINTMENTS MODULE ============================== */
+
+function apptFmtDate(d) { return d.toISOString().slice(0, 10); }
+function apptParseDate(s) {
+  var p = String(s || '').split('-').map(Number);
+  return new Date(p[0] || 1970, (p[1] || 1) - 1, p[2] || 1);
+}
+function apptAddDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function apptMonday(d) { var r = new Date(d); var day = r.getDay(); var diff = day === 0 ? -6 : 1 - day; return apptAddDays(r, diff); }
+
+var APPT_STATUS_COLORS = { Pending: '#C9A24E', Confirmed: '#2A6B9B', Completed: '#2A8B4A', Cancelled: '#C13030', 'No Show': '#C13030' };
+
+function apptMiniCard(a) {
+  return '<button type="button" data-view="' + esc(a.id) + '" class="block w-full text-left rounded-lg border p-2 mb-1.5 text-xs hover:shadow-sm" style="border-color:#E8D4DB;background:#FFFFFF">' +
+    '<div class="flex items-center justify-between gap-2">' +
+    '<span class="font-mono-data" style="color:#7A7A7A">' + esc(a.time || '') + '</span>' +
+    renderBadge(a.status) +
+    '</div>' +
+    '<p class="mt-1 font-medium truncate" style="color:#2B2B2B">' + esc(a.patientName || '') + '</p>' +
+    '<p class="truncate" style="color:#7A7A7A">' + esc(a.type || a.purpose || '') + '</p>' +
+    '</button>';
+}
+
+function renderApptViewToggle(ms) {
+  var views = [['list', 'List'], ['month', 'Month'], ['week', 'Week']];
+  return '<div class="inline-flex rounded-lg border p-0.5" style="border-color:#E8D4DB;background:#FFFFFF">' +
+    views.map(function(v) {
+      var active = (ms.view || 'list') === v[0];
+      return '<button type="button" data-appt-view="' + v[0] + '" aria-pressed="' + active + '" class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors" style="' +
+        (active ? 'background:#2A8B4A;color:#FFFFFF' : 'background:transparent;color:#5A4A62') + '">' + v[1] + '</button>';
+    }).join('') + '</div>';
+}
+
+function renderApptCalNav(ms, label) {
+  return '<div class="flex items-center gap-2 mb-4">' +
+    '<button type="button" data-appt-nav="prev" class="w-8 h-8 rounded-lg border flex items-center justify-center" style="border-color:#E8D4DB;color:#5A4A62">' + icon('chevron-left', 15) + '</button>' +
+    '<button type="button" data-appt-nav="today" class="px-3 py-1.5 rounded-lg border text-xs font-medium" style="border-color:#E8D4DB;color:#5A4A62">Today</button>' +
+    '<button type="button" data-appt-nav="next" class="w-8 h-8 rounded-lg border flex items-center justify-center" style="border-color:#E8D4DB;color:#5A4A62">' + icon('chevron-right', 15) + '</button>' +
+    '<span class="ml-2 text-sm font-semibold" style="color:#2B2B2B">' + esc(label) + '</span>' +
+    '</div>';
+}
+
+function renderApptMonthView(ms, filtered) {
+  var base = ms.calMonth ? apptParseDate(ms.calMonth + '-01') : new Date();
+  var y = base.getFullYear(), m = base.getMonth();
+  var monthLabel = base.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  var byDate = {};
+  filtered.forEach(function(a) { (byDate[a.date] = byDate[a.date] || []).push(a); });
+
+  var firstOfMonth = new Date(y, m, 1);
+  var gridStart = apptMonday(firstOfMonth);
+  var todayStr = apptFmtDate(new Date());
+
+  var html = renderApptCalNav(ms, monthLabel);
+  html += '<div class="grid grid-cols-7 gap-2 mb-1">' +
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function(d) {
+      return '<div class="text-center text-[10px] font-medium uppercase tracking-wide py-1" style="color:#7A7A7A">' + d + '</div>';
+    }).join('') + '</div>';
+
+  html += '<div class="grid grid-cols-7 gap-2">';
+  for (var i = 0; i < 42; i++) {
+    var cellDate = apptAddDays(gridStart, i);
+    var dStr = apptFmtDate(cellDate);
+    var inMonth = cellDate.getMonth() === m;
+    var dayItems = byDate[dStr] || [];
+    var isToday = dStr === todayStr;
+    html += '<button type="button" data-appt-day="' + dStr + '" class="min-h-20 rounded-lg border p-1.5 text-left align-top" style="border-color:' + (isToday ? '#2A8B4A' : '#E8D4DB') + ';background:' + (inMonth ? '#FFFFFF' : '#FAFAFA') + ';opacity:' + (inMonth ? '1' : '0.5') + '">' +
+      '<div class="flex items-center justify-between">' +
+      '<span class="text-xs font-medium" style="color:' + (isToday ? '#2A8B4A' : '#2B2B2B') + '">' + cellDate.getDate() + '</span>' +
+      (dayItems.length ? '<span class="text-[9px] rounded-full px-1.5" style="background:#F0ECF2;color:#5A4A62">' + dayItems.length + '</span>' : '') +
+      '</div>' +
+      '<div class="mt-1 flex flex-wrap gap-0.5">' +
+      dayItems.slice(0, 6).map(function(a) {
+        return '<span class="w-1.5 h-1.5 rounded-full" style="background:' + (APPT_STATUS_COLORS[a.status] || '#7A7A7A') + '"></span>';
+      }).join('') + '</div>' +
+      '</button>';
+  }
+  html += '</div>';
+
+  if (ms.dayPanelDate) {
+    var panelItems = (byDate[ms.dayPanelDate] || []).slice().sort(function(a, b) { return String(a.time || '').localeCompare(b.time || ''); });
+    var panelLabel = apptParseDate(ms.dayPanelDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    html += '<div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">' +
+      '<div class="w-full max-w-sm max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl">' +
+      '<div class="flex items-center justify-between border-b px-5 py-3" style="border-color:#E8D4DB">' +
+      '<h3 class="font-serif-heading text-sm font-semibold" style="color:#2B2B2B">' + esc(panelLabel) + '</h3>' +
+      '<button type="button" data-day-panel-close class="rounded-full p-1 hover:bg-[#FDF6F8]" style="color:#5A4A62">' + icon('x', 16) + '</button>' +
+      '</div>' +
+      '<div class="p-4">' +
+      (panelItems.length ? panelItems.map(apptMiniCard).join('') : '<p class="text-xs" style="color:#7A7A7A">No appointments this day.</p>') +
+      '</div></div></div>';
+  }
+
+  return html;
+}
+
+function renderApptWeekView(ms, filtered) {
+  var base = ms.calWeek ? apptParseDate(ms.calWeek) : apptMonday(new Date());
+  var weekStart = apptMonday(base);
+  var byDate = {};
+  filtered.forEach(function(a) { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  var weekEnd = apptAddDays(weekStart, 6);
+  var label = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  var todayStr = apptFmtDate(new Date());
+
+  var html = renderApptCalNav(ms, label);
+  html += '<div class="grid grid-cols-1 sm:grid-cols-7 gap-2">';
+  for (var i = 0; i < 7; i++) {
+    var d = apptAddDays(weekStart, i);
+    var dStr = apptFmtDate(d);
+    var dayItems = (byDate[dStr] || []).slice().sort(function(a, b) { return String(a.time || '').localeCompare(b.time || ''); });
+    var isToday = dStr === todayStr;
+    html += '<div class="rounded-lg border p-2" style="border-color:' + (isToday ? '#2A8B4A' : '#E8D4DB') + ';background:#FDF6F8;min-height:8rem">' +
+      '<p class="text-[10px] font-medium uppercase tracking-wide mb-1" style="color:' + (isToday ? '#2A8B4A' : '#7A7A7A') + '">' + d.toLocaleDateString('en-US', { weekday: 'short' }) + ' ' + d.getDate() + '</p>' +
+      (dayItems.length ? dayItems.map(apptMiniCard).join('') : '<p class="text-[10px]" style="color:#B0A8AC">No appointments</p>') +
+      '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 function renderAppointmentsModule() {
   var key = 'appointments';
   var config = MODULES[key];
@@ -1399,7 +1519,8 @@ function renderAppointmentsModule() {
     '<div><h2 class="font-serif-heading text-lg font-semibold" style="color:#2B2B2B">Appointment Scheduling System</h2>' +
     '<p class="text-xs" style="color:#5A4A62">' + items.length + ' appointment' + (items.length !== 1 ? 's' : '') + ' on file</p></div>' +
     '</div>' +
-    '<div class="flex gap-2">' +
+    '<div class="flex flex-wrap items-center gap-2">' +
+    renderApptViewToggle(ms) +
     '<button id="export-appointments" class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' + icon('download', 15) + ' Export</button>' +
     '<button data-action="open-doctor-schedule" class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-[#FDF6F8]" style="border-color:#E8D4DB;color:#5A4A62">' + icon('calendar-clock', 15) + ' Doctor Schedule</button>' +
     '<button data-action="add" data-module="appointments" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white bg-[#2A8B4A] hover:bg-[#1B6B3A]">' +
@@ -1438,6 +1559,11 @@ function renderAppointmentsModule() {
     '<span class="text-xs" style="color:#7A7A7A">' + filtered.length + ' appointment' + (filtered.length !== 1 ? 's' : '') + '</span>' +
     '</div>';
 
+  if (ms.view === 'month') {
+    html += renderApptMonthView(ms, filtered);
+  } else if (ms.view === 'week') {
+    html += renderApptWeekView(ms, filtered);
+  } else {
   html += '<div class="overflow-hidden rounded-2xl border shadow-sm" style="border-color:#E8D4DB;background:#FDF6F8">' +
     '<div class="overflow-x-auto"><table class="w-full text-left text-sm">' +
     '<thead><tr class="border-b text-xs uppercase tracking-wide" style="border-color:#E8D4DB;background:#FDF6F8;color:#7A1F3D">' +
@@ -1485,6 +1611,7 @@ function renderAppointmentsModule() {
   }
   html += '<button data-page="' + (pg + 1) + '" class="w-7 h-7 rounded flex items-center justify-center disabled:opacity-30" style="background:#FFFFFF;color:#7A7A7A"' + (pg >= totalPages ? ' disabled' : '') + '>' + icon('chevron-right', 13) + '</button>' +
     '</div></div>';
+  }
 
   if (ms.modalOpen) {
     var modalTitle = ms.editing ? 'Edit Appointment' : 'Schedule Appointment';
@@ -4521,6 +4648,54 @@ function setupEvents() {
       var ms = getModuleState('appointments');
       ms.statusFilter = target.getAttribute('data-appt-filter');
       ms.page = 1;
+      renderMainContent();
+      return;
+    }
+
+    /* Appointment view toggle (list/month/week) */
+    target = e.target.closest('[data-appt-view]');
+    if (target) {
+      var ms = getModuleState('appointments');
+      ms.view = target.getAttribute('data-appt-view');
+      ms.dayPanelDate = null;
+      renderMainContent();
+      return;
+    }
+
+    /* Appointment calendar nav (prev/next/today) */
+    target = e.target.closest('[data-appt-nav]');
+    if (target) {
+      var ms = getModuleState('appointments');
+      var dir = target.getAttribute('data-appt-nav');
+      if (ms.view === 'month') {
+        var mBase = ms.calMonth ? apptParseDate(ms.calMonth + '-01') : new Date();
+        if (dir === 'today') mBase = new Date();
+        else mBase = new Date(mBase.getFullYear(), mBase.getMonth() + (dir === 'next' ? 1 : -1), 1);
+        ms.calMonth = mBase.getFullYear() + '-' + String(mBase.getMonth() + 1).padStart(2, '0');
+      } else if (ms.view === 'week') {
+        var wBase = ms.calWeek ? apptParseDate(ms.calWeek) : apptMonday(new Date());
+        if (dir === 'today') wBase = apptMonday(new Date());
+        else wBase = apptAddDays(apptMonday(wBase), dir === 'next' ? 7 : -7);
+        ms.calWeek = apptFmtDate(wBase);
+      }
+      renderMainContent();
+      return;
+    }
+
+    /* Appointment month-cell click: open day panel */
+    target = e.target.closest('[data-appt-day]');
+    if (target) {
+      var ms = getModuleState('appointments');
+      ms.dayPanelDate = target.getAttribute('data-appt-day');
+      renderMainContent();
+      return;
+    }
+
+    /* Appointment day panel close */
+    target = e.target.closest('[data-day-panel-close]');
+    if (target) {
+      var ms = getModuleState('appointments');
+      ms.dayPanelDate = null;
       renderMainContent();
       return;
     }
