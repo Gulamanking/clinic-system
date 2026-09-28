@@ -5576,10 +5576,21 @@ async function doSave(key) {
   /* Sync live DOM values into ms.form before any validation/re-render
      so that re-rendering (on error) preserves user input */
   config.fields.forEach(function(f) {
+    if (f.hideInForm) return;
     var liveVal = getFieldValue(key, f.name);
     if (f.type === 'number') liveVal = Number(liveVal);
     ms.form[f.name] = liveVal;
   });
+
+  // studentName is hideInForm — normally carried over when the modal opens
+  // from a student record, but a direct "Add" click leaves it blank. Derive
+  // it from the typed Student ID so validation and the saved record don't
+  // end up with an empty name.
+  if (key === 'medicalHistory' && !ms.form.studentName) {
+    var studentsMs = getModuleState('students');
+    var matchedStudent = (studentsMs.items || []).find(function(s) { return s.studentId === ms.form.studentId; });
+    if (matchedStudent) ms.form.studentName = matchedStudent.name || '';
+  }
 
   /* Validate */
   for (var i = 0; i < config.fields.length; i++) {
